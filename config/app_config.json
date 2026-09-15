@@ -1,0 +1,9 @@
+﻿{
+  "instruments": {
+    "scope": { "type": "mock" }
+  },
+  "data": {
+    "db_path": "data/test.db",
+    "report_dir": "reports"
+  }
+}

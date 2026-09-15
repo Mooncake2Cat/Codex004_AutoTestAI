@@ -1,0 +1,17 @@
+﻿{
+  "instruments": {
+    "scope": {
+      "type": "rigol_dho",
+      "host": "192.168.10.16",
+      "port": 5555,
+      "timeout": 3.0,
+      "terminator": "\n",
+      "channels": 4,
+      "model": "DHO924S"
+    }
+  },
+  "data": {
+    "db_path": "data/test.db",
+    "report_dir": "reports"
+  }
+}

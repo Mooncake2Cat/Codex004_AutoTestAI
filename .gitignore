@@ -1,0 +1,17 @@
+﻿.venv/
+__pycache__/
+*.pyc
+data/
+reports/
+.pytest_cache/
+
+# ---- 归档补充（2026-09-15）----
+# 官方手册与大型派生文档：不纳入版本管理（内容已由 Markdown/命令索引保留）
+docs/*.pdf
+docs/*.html
+
+# 常见临时/IDE 文件
+*.log
+.idea/
+.vscode/
+Thumbs.db
