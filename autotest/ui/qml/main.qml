@@ -26,6 +26,17 @@ ApplicationWindow {
     property var measureKeys: ["vpp", "vrms", "vavg", "freq", "per", "rtime", "ftime", "duty"]
     property var measureLabels: ["Vpp", "Vrms", "Vavg", "Freq", "Period", "Rise", "Fall", "Duty"]
 
+    // 分层配色（表示/胶合/应用/HAL/数据/报告）
+    function layerColor(layer) {
+        if (layer === "ui") return "#58a6ff";
+        if (layer === "glue") return "#39c5cf";
+        if (layer === "app") return "#3fb950";
+        if (layer === "hal") return "#f0883e";
+        if (layer === "data") return "#bc8cff";
+        if (layer === "report") return "#8b949e";
+        return "#8b98a5";
+    }
+
     function indexOfValue(arr, v) {
         for (var i = 0; i < arr.length; i++) {
             if (Math.abs(arr[i] - v) <= Math.abs(arr[i]) * 1e-3 + 1e-15)
@@ -116,6 +127,10 @@ ApplicationWindow {
                 text: (scope.waveformOn ? "● " : "○ ")
                       + (scope.simulationMode ? qsTr("仿真波形") : qsTr("波形读取"))
                 onClicked: scope.setWaveformOn(!scope.waveformOn)
+            }
+            Button {
+                text: qsTr("分层跟踪")
+                onClicked: tracePanel.visible = !tracePanel.visible
             }
             Item { Layout.fillWidth: true }
             Label {
@@ -608,6 +623,69 @@ ApplicationWindow {
             }
         }
 
+        // ================= 分层跟踪（阶段1 临时视图，事件驱动） =================
+        Rectangle {
+            id: tracePanel
+            Layout.fillWidth: true
+            Layout.preferredHeight: visible ? 190 : 0
+            visible: false
+            color: "#0d1117"
+            border.color: "#30363d"
+            radius: 4
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 4
+
+                RowLayout {
+                    Label { text: qsTr("分层跟踪（真实事件）"); color: "#e6edf3"; font.bold: true }
+                    Label {
+                        id: traceStats
+                        text: qsTr("等待事件…")
+                        color: "#8b98a5"
+                        font.pixelSize: 11
+                    }
+                    Item { Layout.fillWidth: true }
+                    Button {
+                        text: qsTr("清空")
+                        onClicked: { traceModel.clear(); trace.clear() }
+                    }
+                }
+
+                RowLayout {
+                    spacing: 4
+                    Label { text: qsTr("时间"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 90 }
+                    Label { text: qsTr("层"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 55 }
+                    Label { text: qsTr("事件"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 140 }
+                    Label { text: qsTr("详情 / 结果"); color: "#8b98a5"; font.pixelSize: 11; Layout.fillWidth: true }
+                    Label { text: qsTr("耗时"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 70 }
+                }
+
+                ListView {
+                    id: traceList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    model: traceModel
+                    clip: true
+                    delegate: RowLayout {
+                        spacing: 4
+                        Label { text: model.time; color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 90 }
+                        Label { text: model.layer; color: root.layerColor(model.layer); font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 55 }
+                        Label { text: model.kind + "/" + model.action; color: "#c9d1d9"; font.pixelSize: 11; Layout.preferredWidth: 140; elide: Text.ElideRight }
+                        Label {
+                            text: model.detail + (model.result.length > 0 ? "　⇒ " + model.result : "")
+                            color: model.status === "error" ? "#f85149" : "#8b98a5"
+                            font.pixelSize: 11
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                        Label { text: model.duration; color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 70 }
+                    }
+                }
+            }
+        }
+
         // ================= 最近下发的 SCPI 命令 =================
         Rectangle {
             Layout.fillWidth: true
@@ -662,13 +740,40 @@ ApplicationWindow {
     }
 
     ListModel { id: resultModel }
+    ListModel { id: traceModel }
 
     Connections {
         target: controller
         function onResultAdded(line) { resultModel.append({ "text": line }) }
         function onFlowFinished(testId) { resultModel.append({ "text": "流程结束: " + testId }) }
     }
+
+    // 分层跟踪：事件总线 -> 界面（真实调用链）
+    Connections {
+        target: trace
+        function onEventLogged(ev) {
+            traceModel.append({
+                "time": (ev.ts && ev.ts.length >= 23) ? ev.ts.substring(11, 23) : (ev.ts || ""),
+                "layer": ev.layer || "",
+                "kind": ev.kind || "",
+                "action": ev.action || "",
+                "detail": ev.detail || "",
+                "result": ev.result || "",
+                "duration": (ev.duration_ms === undefined ? "" : ev.duration_ms.toFixed(1) + " ms"),
+                "status": ev.status || "ok"
+            })
+            while (traceModel.count > 500) traceModel.remove(0)
+            trace.refreshStats()
+        }
+        function onStatsChanged(st) {
+            var bl = st.by_layer
+            traceStats.text = qsTr("事件 ") + st.total + qsTr(" / 存储 ") + st.stored + qsTr(" / 轮询噪声 ") + st.noisy
+                              + "　UI " + bl.ui + " · 胶合 " + bl.glue + " · 应用 " + bl.app
+                              + " · HAL " + bl.hal + " · 数据 " + bl.data + " · 报告 " + bl.report
+        }
+    }
 }
+
 
 
 

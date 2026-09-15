@@ -12,14 +12,17 @@ def main() -> int:
 
     from .controller import TestController
     from .scope_panel import ScopePanel
+    from .trace_view import TraceBridge
 
     app = QGuiApplication(sys.argv)
     app.setApplicationName("AutoTestAI-Prototype")
 
     controller = TestController()
     scope = ScopePanel()
+    trace = TraceBridge()
     # 持有 Python 引用，避免被 GC
     controller._scope = scope
+    controller._trace = trace
     scope.setCommandSink(controller.sendScopeCommand)
     scope.setMeasureSink(controller.queryScopeItem)
     scope.setWaveformSink(controller.readScopeWaveform)
@@ -29,6 +32,7 @@ def main() -> int:
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("controller", controller)
     engine.rootContext().setContextProperty("scope", scope)
+    engine.rootContext().setContextProperty("trace", trace)
 
     qml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qml", "main.qml")
     engine.load(QUrl.fromLocalFile(qml_path))
@@ -42,6 +46,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 
 
 

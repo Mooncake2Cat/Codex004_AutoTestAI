@@ -12,6 +12,7 @@ import math
 import re
 from typing import Dict, Optional, Tuple
 
+from ..bus.event_bus import bus
 from .instrument import Instrument
 
 _IDN = "RIGOL TECHNOLOGIES,DHO924S,MOCK-SN-000001,9.9.9"
@@ -45,32 +46,43 @@ class MockInstrument(Instrument):
         return None
 
     def write(self, command: str) -> None:
-        # 仿真器不维护状态；:RUN/:STOP 等写命令直接忽略
-        return None
+        # 仿真器不维护状态；:RUN/:STOP 等写命令直接忽略（仍上报 HAL 事件，供架构台展示）
+        with bus.span("hal", "command", "write", detail=command, source="sim"):
+            return None
 
     def query(self, command: str, timeout: Optional[float] = None) -> str:
-        key = command.strip()
-        if key.upper() == "*IDN?":
-            return _IDN
+        info: dict = {}
+        with bus.span("hal", "command", "query", detail=command, source="sim", info=info):
+            key = command.strip()
+            if key.upper() == "*IDN?":
+                info["result"] = _IDN
+                return _IDN
 
-        m = _MEASURE_RE.match(key)
-        if m:
-            item = m.group(1).upper()
-            channel = int(m.group(2))
-            value = self._sim_measure(item, channel)
-            return _fmt(value) if value is not None else _INVALID
+            m = _MEASURE_RE.match(key)
+            if m:
+                item = m.group(1).upper()
+                channel = int(m.group(2))
+                value = self._sim_measure(item, channel)
+                response = _fmt(value) if value is not None else _INVALID
+                info["result"] = response
+                return response
 
-        # 未识别的查询返回空串（方法层解析为无效，便于暴露流程中的拼写问题）
-        return ""
+            # 未识别的查询返回空串（方法层解析为无效，便于暴露流程中的拼写问题）
+            info["result"] = "(未识别的查询)"
+            return ""
 
     def measure_value(self, item: str, channel: int = 1) -> Tuple[Optional[float], str]:
         """与真机驱动对称的接口：返回 (value, raw)。"""
-        m = _MEASURE_RE.match(":MEASure:ITEM? %s,CHANnel%d" % (item, channel))
-        if not m:
-            raise ValueError("非法测量命令")
-        item = m.group(1).upper()
-        channel = int(m.group(2))
-        value = self._sim_measure(item, channel)
+        command = ":MEASure:ITEM? %s,CHANnel%d" % (item, channel)
+        info: dict = {}
+        with bus.span("hal", "command", "measure", detail=command, source="sim", info=info):
+            m = _MEASURE_RE.match(command)
+            if not m:
+                raise ValueError("非法测量命令")
+            item = m.group(1).upper()
+            channel = int(m.group(2))
+            value = self._sim_measure(item, channel)
+            info["result"] = _fmt(value) if value is not None else _INVALID
         return (value, _fmt(value)) if value is not None else (None, _INVALID)
 
     def _sim_measure(self, item: str, channel: int) -> Optional[float]:
@@ -85,4 +97,5 @@ class MockInstrument(Instrument):
 
     def close(self) -> None:
         return None
+
 

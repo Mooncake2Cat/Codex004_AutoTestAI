@@ -17,6 +17,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import QObject, QTimer, Property, Signal, Slot
 
+from ..bus.event_bus import bus
 from ..core import scope_commands as sc
 from ..hal.rigol_dho import parse_measure_value
 
@@ -167,6 +168,9 @@ class ScopePanel(QObject):
     def setSimulationMode(self, on: bool) -> None:
         """切换数据源：True=仿真波形（无真机时的软件调试），False=真机波形/读数。"""
         self._sim_mode = bool(on)
+        bus.publish("glue", "mode", "dataSource",
+                    detail="仿真波形/读数" if self._sim_mode else "真机波形/读数",
+                    source="sim" if self._sim_mode else "real")
         self._poll_timer.stop()
         self._wave_timer.stop()
         self._sim_timer.stop()
@@ -326,6 +330,9 @@ class ScopePanel(QObject):
         self.stateChanged.emit()
 
     def _apply(self, command: str) -> None:
+        # 事件总线：表示层动作（面板操作）→ 经胶合层下发
+        bus.publish("ui", "action", (command.split() or [""])[0], detail=command,
+                    source="sim" if self._sim_mode else "real")
         self._command_text = command
         state = "（未配置真机：config 为 mock，命令未下发）"
         if callable(self._sink):
@@ -704,6 +711,7 @@ class ScopePanel(QObject):
                 text = str(value)
             lines.append("%-5s %s" % (label, text))
         return "\n".join(lines) if lines else "（未勾选测量项）"
+
 
 
 

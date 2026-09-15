@@ -7,6 +7,7 @@ from __future__ import annotations
 import socket
 from typing import Optional
 
+from ..bus.event_bus import bus
 from .instrument import Instrument
 
 
@@ -52,21 +53,30 @@ class TcpScpiInstrument(Instrument):
 
     def write(self, command: str) -> None:
         self._ensure_open()
+        with bus.span("hal", "command", "write", detail=command, source="real"):
+            self._send(command)
+
+    def _send(self, command: str) -> None:
+        """实际发送（不含事件上报，供 query/query_binary 复用，避免重复计数）。"""
         self._sock.sendall((command + self.terminator).encode("utf-8"))
 
     def query(self, command: str, timeout: Optional[float] = None) -> str:
         self._ensure_open()
-        if timeout is not None:
-            self._sock.settimeout(timeout)
-        self.write(command)
-        data = bytearray()
-        term = self.terminator.encode("utf-8")
-        while not data.endswith(term):
-            chunk = self._sock.recv(4096)
-            if not chunk:
-                break
-            data.extend(chunk)
-        return bytes(data).decode("utf-8", errors="replace").rstrip(self.terminator)
+        info: dict = {}
+        with bus.span("hal", "command", "query", detail=command, source="real", info=info):
+            if timeout is not None:
+                self._sock.settimeout(timeout)
+            self._send(command)
+            data = bytearray()
+            term = self.terminator.encode("utf-8")
+            while not data.endswith(term):
+                chunk = self._sock.recv(4096)
+                if not chunk:
+                    break
+                data.extend(chunk)
+            response = bytes(data).decode("utf-8", errors="replace").rstrip(self.terminator)
+            info["result"] = response
+        return response
 
     def query_binary(self, command: str, timeout: Optional[float] = None) -> bytes:
         """发送查询并读取 IEEE-488.2 定长块（用于 :WAVeform:DATA? 等二进制返回）。
@@ -74,23 +84,26 @@ class TcpScpiInstrument(Instrument):
         返回 payload 字节（不含块头与结尾换行）。
         """
         self._ensure_open()
-        if timeout is not None:
-            self._sock.settimeout(timeout)
-        self.write(command)
-        head = self._recv_exact(2)
-        if head[:1] != b"#":
-            raise IOError("二进制响应缺少 IEEE-488.2 块头: %r" % head)
-        ndigits = int(head[1:2])
-        length = int(self._recv_exact(ndigits))
-        payload = self._recv_exact(length) if length else b""
-        # 消费块尾的换行（Rigol 会附加换行），避免污染下一次查询
-        try:
-            self._sock.settimeout(0.2)
-            self._sock.recv(1)
-        except Exception:  # noqa: BLE001
-            pass
-        finally:
-            self._sock.settimeout(self.timeout)
+        info: dict = {}
+        with bus.span("hal", "command", "query_binary", detail=command, source="real", info=info):
+            if timeout is not None:
+                self._sock.settimeout(timeout)
+            self._send(command)
+            head = self._recv_exact(2)
+            if head[:1] != b"#":
+                raise IOError("二进制响应缺少 IEEE-488.2 块头: %r" % head)
+            ndigits = int(head[1:2])
+            length = int(self._recv_exact(ndigits))
+            payload = self._recv_exact(length) if length else b""
+            # 消费块尾的换行（Rigol 会附加换行），避免污染下一次查询
+            try:
+                self._sock.settimeout(0.2)
+                self._sock.recv(1)
+            except Exception:  # noqa: BLE001
+                pass
+            finally:
+                self._sock.settimeout(self.timeout)
+            info["result"] = "%d bytes" % len(payload)
         return payload
 
     def _recv_exact(self, count: int) -> bytes:
@@ -121,5 +134,6 @@ class TcpScpiInstrument(Instrument):
 
     def __exit__(self, exc_type, exc, tb):
         self.close()
+
 
 

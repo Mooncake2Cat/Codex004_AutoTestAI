@@ -5,6 +5,8 @@ import html
 import os
 from typing import Any, Dict
 
+from ..bus.event_bus import bus
+
 
 def render(result: Dict[str, Any]) -> str:
     measurements = result.get("measurements", [])
@@ -59,8 +61,13 @@ def render(result: Dict[str, Any]) -> str:
 
 
 def save(result: Dict[str, Any], path: str) -> str:
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    content = render(result)
-    with open(path, "w", encoding="utf-8") as fh:
-        fh.write(content)
+    info: Dict[str, Any] = {}
+    # 事件总线：报告生成
+    with bus.span("report", "generate", "html_report", detail=path, info=info):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        content = render(result)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(content)
+        info["result"] = "%s (%d 测量项)" % (path, len(result.get("measurements", [])))
     return path
+
