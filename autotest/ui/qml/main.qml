@@ -1,15 +1,30 @@
 ﻿import QtQuick
 import QtQuick.Controls
+import QtQuick.Window
 import QtQuick.Layouts
 
 ApplicationWindow {
     id: root
-    width: 1320
-    height: 900
+    // 默认约为屏幕面积的 1/2，居中；每次启动按默认几何（不记忆位置）
+    property var archWindow: null
+    width: Math.round(Screen.width * 0.72)
+    height: Math.round(Screen.height * 0.70)
+    x: Math.round((Screen.width - width) / 2)
+    y: Math.round((Screen.height - height) / 2)
     visible: true
-    title: qsTr("通用自动化测试软件平台 - 原型验证（Rigol DHO924S 示波器）")
-    minimumWidth: 1100
-    minimumHeight: 760
+    title: qsTr("操作台 - 通用自动化测试平台原型（Rigol DHO924S）")
+    minimumWidth: 1000
+    minimumHeight: 620
+
+    // 隐藏 / 显示窗口2（架构台）；快捷键 F2
+    function toggleArchitecture() {
+        if (archWindow) archWindow.visible = !archWindow.visible
+    }
+
+    Shortcut {
+        sequence: "F2"
+        onActivated: root.toggleArchitecture()
+    }
 
     // 面板选项表
     property int selectedChannel: 1
@@ -59,6 +74,20 @@ ApplicationWindow {
         offsetSpin.value = Math.round(scope.channelOffset(ch) * 1000)
     }
 
+    // 流程步骤（左区，只读展示）
+    function refreshFlow() {
+        flowStepModel.clear()
+        var rows = controller.flowSteps()
+        for (var i = 0; i < rows.length; i++) flowStepModel.append(rows[i])
+    }
+
+    // 报表总表（右区）
+    function refreshReport() {
+        reportModel.clear()
+        var rows = controller.reportRows()
+        for (var i = 0; i < rows.length; i++) reportModel.append(rows[i])
+    }
+
     onSelectedChannelChanged: {
         refreshVertical()
         scope.setPollChannel(root.selectedChannel)
@@ -66,6 +95,8 @@ ApplicationWindow {
     Component.onCompleted: {
         refreshVertical()
         scope.setPollChannel(root.selectedChannel)
+        refreshFlow()
+        refreshReport()
     }
 
     // ================= 顶部标题栏 =================
@@ -129,8 +160,8 @@ ApplicationWindow {
                 onClicked: scope.setWaveformOn(!scope.waveformOn)
             }
             Button {
-                text: qsTr("分层跟踪")
-                onClicked: tracePanel.visible = !tracePanel.visible
+                text: qsTr("架构台 (F2)")
+                onClicked: root.toggleArchitecture()
             }
             Item { Layout.fillWidth: true }
             Label {
@@ -139,6 +170,128 @@ ApplicationWindow {
                 color: controller.status.indexOf("完成") === 0 ? "#1a7f37" : "#24292f"
             }
         }
+
+        // ================= 三区：左(流程) | 中(仪器) | 右(报表) =================
+        SplitView {
+            id: mainSplit
+            orientation: Qt.Horizontal
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            // ---------- 左区：流程控制 + 流程编辑 ----------
+            Rectangle {
+                SplitView.preferredWidth: 350
+                color: "#f6f8fa"
+                border.color: "#d0d7de"
+                radius: 4
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+
+                    Label { text: qsTr("流程控制"); font.bold: true; color: "#24292f" }
+
+                    GridLayout {
+                        columns: 4
+                        columnSpacing: 6
+                        rowSpacing: 4
+                        Label { text: qsTr("产品"); color: "#57606a"; font.pixelSize: 11 }
+                        TextField { id: dutModel; Layout.fillWidth: true; text: "演示被测件"; placeholderText: qsTr("型号") }
+                        Label { text: qsTr("序列号"); color: "#57606a"; font.pixelSize: 11 }
+                        TextField { id: dutSn; Layout.fillWidth: true; text: "DEMO-001"; placeholderText: "SN" }
+                    }
+
+                    RowLayout {
+                        spacing: 6
+                        Button { text: qsTr("加电"); onClicked: controller.manualAction("power_on") }
+                        Button { text: qsTr("断电"); onClicked: controller.manualAction("power_off") }
+                        Button { text: qsTr("测波形"); onClicked: scope.setWaveformOn(true) }
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    RowLayout {
+                        spacing: 6
+                        Button { text: qsTr("▶ 启动"); onClicked: { resultModel.clear(); controller.runFlow() } }
+                        Button { text: qsTr("⏸ 暂停"); onClicked: controller.manualAction("pause") }
+                        Button { text: qsTr("■ 停止"); onClicked: controller.manualAction("stop") }
+                        Button { text: qsTr("⏭ 单步"); onClicked: controller.manualAction("step") }
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: "#d0d7de" }
+
+                    RowLayout {
+                        Label { text: qsTr("流程编辑"); font.bold: true; color: "#24292f" }
+                        Label {
+                            text: controller.flowLoaded
+                                  ? qsTr("（") + controller.flowName + qsTr("）")
+                                  : qsTr("（未加载流程）")
+                            color: "#57606a"; font.pixelSize: 10
+                            Layout.fillWidth: true; elide: Text.ElideRight
+                        }
+                    }
+                    Label {
+                        text: qsTr("阶段2：只读展示；阶段4 支持增删改与运行高亮")
+                        color: "#8b98a5"; font.pixelSize: 10
+                    }
+
+                    ListView {
+                        id: flowStepList
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        model: flowStepModel
+                        clip: true
+                        spacing: 2
+                        delegate: Rectangle {
+                            width: flowStepList.width
+                            height: 26
+                            color: "#ffffff"
+                            border.color: "#d0d7de"
+                            radius: 3
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 6
+                                anchors.rightMargin: 6
+                                spacing: 6
+                                Label { text: model.seq; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 24 }
+                                Label { text: model.stepType; color: "#0969da"; font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 64 }
+                                Label { text: model.summary; color: "#24292f"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: "#d0d7de" }
+                    Label { text: qsTr("最近命令"); font.bold: true; color: "#24292f" }
+                    Label {
+                        Layout.fillWidth: true
+                        text: controller.lastCommandText.length > 0 ? controller.lastCommandText : "—"
+                        font.family: "Consolas, monospace"
+                        font.pixelSize: 10
+                        color: "#57606a"
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 3
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            // ---------- 中区：仪器坞（示波器仪器格） ----------
+            Rectangle {
+                SplitView.fillWidth: true
+                color: "transparent"
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 6
+
+                    RowLayout {
+                        Label { text: qsTr("仪器坞"); font.bold: true; color: "#24292f" }
+                        CheckBox { text: qsTr("示波器 DHO924S"); checked: true }
+                        CheckBox { text: qsTr("虚拟电源 SPD3303X-E（阶段3）"); enabled: false }
+                        Item { Layout.fillWidth: true }
+                        Label { text: qsTr("阶段3：仪器格可勾选显示、分隔条调整大小"); color: "#8b98a5"; font.pixelSize: 10 }
+                    }
 
         // ================= 波形屏 + 读数 =================
         RowLayout {
@@ -623,65 +776,52 @@ ApplicationWindow {
             }
         }
 
-        // ================= 分层跟踪（阶段1 临时视图，事件驱动） =================
-        Rectangle {
-            id: tracePanel
-            Layout.fillWidth: true
-            Layout.preferredHeight: visible ? 190 : 0
-            visible: false
-            color: "#0d1117"
-            border.color: "#30363d"
-            radius: 4
+                }
+            }
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 4
+            // ---------- 右区：测试报表（总表） ----------
+            Rectangle {
+                SplitView.preferredWidth: 320
+                color: "#f6f8fa"
+                border.color: "#d0d7de"
+                radius: 4
 
-                RowLayout {
-                    Label { text: qsTr("分层跟踪（真实事件）"); color: "#e6edf3"; font.bold: true }
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 6
+
+                    Label { text: qsTr("测试报表（总表）"); font.bold: true; color: "#24292f" }
                     Label {
-                        id: traceStats
-                        text: qsTr("等待事件…")
-                        color: "#8b98a5"
-                        font.pixelSize: 11
+                        Layout.fillWidth: true
+                        text: qsTr("阶段2：展示本次测量；阶段5 接入列映射、上下限判定与 HTML 导出")
+                        color: "#8b98a5"; font.pixelSize: 10; wrapMode: Text.Wrap
                     }
-                    Item { Layout.fillWidth: true }
-                    Button {
-                        text: qsTr("清空")
-                        onClicked: { traceModel.clear(); trace.clear() }
-                    }
-                }
 
-                RowLayout {
-                    spacing: 4
-                    Label { text: qsTr("时间"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 90 }
-                    Label { text: qsTr("层"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 55 }
-                    Label { text: qsTr("事件"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 140 }
-                    Label { text: qsTr("详情 / 结果"); color: "#8b98a5"; font.pixelSize: 11; Layout.fillWidth: true }
-                    Label { text: qsTr("耗时"); color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 70 }
-                }
-
-                ListView {
-                    id: traceList
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    model: traceModel
-                    clip: true
-                    delegate: RowLayout {
+                    RowLayout {
                         spacing: 4
-                        Label { text: model.time; color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 90 }
-                        Label { text: model.layer; color: root.layerColor(model.layer); font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 55 }
-                        Label { text: model.kind + "/" + model.action; color: "#c9d1d9"; font.pixelSize: 11; Layout.preferredWidth: 140; elide: Text.ElideRight }
-                        Label {
-                            text: model.detail + (model.result.length > 0 ? "　⇒ " + model.result : "")
-                            color: model.status === "error" ? "#f85149" : "#8b98a5"
-                            font.pixelSize: 11
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                        }
-                        Label { text: model.duration; color: "#8b98a5"; font.pixelSize: 11; Layout.preferredWidth: 70 }
+                        Label { text: qsTr("项目"); color: "#57606a"; font.pixelSize: 10; Layout.fillWidth: true }
+                        Label { text: qsTr("数值"); color: "#57606a"; font.pixelSize: 10; Layout.preferredWidth: 64 }
+                        Label { text: qsTr("单位"); color: "#57606a"; font.pixelSize: 10; Layout.preferredWidth: 38 }
+                        Label { text: qsTr("判定"); color: "#57606a"; font.pixelSize: 10; Layout.preferredWidth: 36 }
                     }
+
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        model: reportModel
+                        clip: true
+                        spacing: 2
+                        delegate: RowLayout {
+                            spacing: 4
+                            Label { text: model.name; color: "#24292f"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                            Label { text: model.value; color: "#24292f"; font.pixelSize: 11; Layout.preferredWidth: 64; elide: Text.ElideRight }
+                            Label { text: model.unit; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 38 }
+                            Label { text: model.verdict; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 36 }
+                        }
+                    }
+
+                    Button { text: qsTr("导出 HTML"); onClicked: controller.saveReport("reports/report.html") }
                 }
             }
         }
@@ -740,39 +880,24 @@ ApplicationWindow {
     }
 
     ListModel { id: resultModel }
-    ListModel { id: traceModel }
+    ListModel { id: flowStepModel }
+    ListModel { id: reportModel }
 
     Connections {
         target: controller
         function onResultAdded(line) { resultModel.append({ "text": line }) }
-        function onFlowFinished(testId) { resultModel.append({ "text": "流程结束: " + testId }) }
-    }
-
-    // 分层跟踪：事件总线 -> 界面（真实调用链）
-    Connections {
-        target: trace
-        function onEventLogged(ev) {
-            traceModel.append({
-                "time": (ev.ts && ev.ts.length >= 23) ? ev.ts.substring(11, 23) : (ev.ts || ""),
-                "layer": ev.layer || "",
-                "kind": ev.kind || "",
-                "action": ev.action || "",
-                "detail": ev.detail || "",
-                "result": ev.result || "",
-                "duration": (ev.duration_ms === undefined ? "" : ev.duration_ms.toFixed(1) + " ms"),
-                "status": ev.status || "ok"
-            })
-            while (traceModel.count > 500) traceModel.remove(0)
-            trace.refreshStats()
+        function onFlowFinished(testId) {
+            resultModel.append({ "text": "流程结束: " + testId })
+            root.refreshReport()
         }
-        function onStatsChanged(st) {
-            var bl = st.by_layer
-            traceStats.text = qsTr("事件 ") + st.total + qsTr(" / 存储 ") + st.stored + qsTr(" / 轮询噪声 ") + st.noisy
-                              + "　UI " + bl.ui + " · 胶合 " + bl.glue + " · 应用 " + bl.app
-                              + " · HAL " + bl.hal + " · 数据 " + bl.data + " · 报告 " + bl.report
-        }
+        function onFlowChanged() { root.refreshFlow() }
+        function onReportChanged() { root.refreshReport() }
     }
 }
+
+
+
+
 
 
 

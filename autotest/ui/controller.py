@@ -20,6 +20,8 @@ class TestController(QObject):
     resultAdded = Signal(str)
     flowFinished = Signal(str)
     lastCommandChanged = Signal(str)
+    flowChanged = Signal()
+    reportChanged = Signal()
 
     def __init__(
         self,
@@ -57,6 +59,15 @@ class TestController(QObject):
             else:
                 parts.append("%s: %s" % (name, kind))
         return " | ".join(parts) if parts else "（未配置仪器）"
+
+    @Property(bool, notify=flowChanged)
+    def flowLoaded(self) -> bool:
+        """是否已加载流程（左区流程编辑区据此显示状态）。"""
+        return self._flow is not None
+
+    @Property(str, notify=flowChanged)
+    def flowName(self) -> str:
+        return (self._flow or {}).get("name", "")
 
     @Property(bool, constant=True)
     def usesSimulation(self) -> bool:
@@ -108,6 +119,7 @@ class TestController(QObject):
                 self._flow = load_flow(path)
                 self._set_status("已加载流程: %s" % path)
                 info["result"] = "已加载"
+                self.flowChanged.emit()
             except Exception as exc:  # noqa: BLE001
                 self._set_status("加载流程失败: %s" % exc)
                 info["result"] = str(exc)
@@ -144,6 +156,7 @@ class TestController(QObject):
                 self._store.save_result(result)
                 self._set_status("完成: %s" % result.status)
                 self.flowFinished.emit(result.test_id)
+                self.reportChanged.emit()
                 info["result"] = "status=%s, %d 条测量" % (result.status, len(result.measurements))
             except Exception as exc:  # noqa: BLE001
                 self._set_status("失败: %s" % exc)
@@ -237,6 +250,53 @@ class TestController(QObject):
             except Exception:  # noqa: BLE001
                 return []
 
+    @Slot(result="QVariantList")
+    def flowSteps(self):
+        """流程步骤（阶段2 只读展示；阶段4 支持编辑）。"""
+        rows = []
+
+        def walk(items, prefix=""):
+            for idx, step in enumerate(items, 1):
+                seq = "%s%d" % (prefix, idx)
+                step_type = step.get("type", "")
+                if step_type == "measure":
+                    summary = "%s · %s" % (step.get("instrument", ""), step.get("method", ""))
+                elif step_type == "loop":
+                    summary = "循环 ×%s" % step.get("count", 1)
+                elif step_type == "branch":
+                    summary = "条件分支"
+                else:
+                    summary = str(step.get("params", ""))[:40]
+                rows.append({
+                    "seq": seq,
+                    "stepType": step_type,
+                    "summary": summary,
+                })
+                if step_type == "loop":
+                    walk(step.get("body", []), seq + ".")
+
+        walk((self._flow or {}).get("steps", []))
+        return rows
+
+    @Slot(str)
+    def manualAction(self, name: str) -> None:
+        """左区手动动作（阶段2 仅记录事件；阶段3/4 接入虚拟电源与流程控制）。"""
+        bus.publish("ui", "action", "manual:" + str(name), detail="阶段3/4 接入后生效")
+        self._set_status("手动动作: %s（阶段3/4 接入后生效）" % name)
+
+    @Slot(result="QVariantList")
+    def reportRows(self):
+        """右侧报表总表数据（阶段2：展示本次测量；阶段5 增加列映射与判据）。"""
+        rows = []
+        if self._last_result is not None:
+            for m in self._last_result.measurements:
+                rows.append({
+                    "name": m.name,
+                    "value": "" if m.value is None else ("%.6g" % m.value),
+                    "unit": m.unit,
+                    "verdict": "—",
+                })
+        return rows
     @Slot(str)
     def saveReport(self, path: str = "reports/report.html") -> None:
         from ..report.html_report import save
@@ -257,6 +317,7 @@ class TestController(QObject):
                 self._set_status("保存报告失败: %s" % exc)
                 info["result"] = str(exc)
                 info["status"] = "error"
+
 
 
 

@@ -34,11 +34,28 @@ def main() -> int:
     engine.rootContext().setContextProperty("scope", scope)
     engine.rootContext().setContextProperty("trace", trace)
 
-    qml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qml", "main.qml")
-    engine.load(QUrl.fromLocalFile(qml_path))
+    qml_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qml")
+    arch_path = os.path.join(qml_dir, "architecture.qml")
+    console_path = os.path.join(qml_dir, "main.qml")
 
-    if not engine.rootObjects():
+    # 先加载架构台（窗口2，最大化），再加载操作台（窗口1）——操作台默认在最前
+    engine.load(QUrl.fromLocalFile(arch_path))
+    engine.load(QUrl.fromLocalFile(console_path))
+
+    roots = engine.rootObjects()
+    if not roots:
         return 1
+
+    # 把架构台窗口引用注入操作台，供"架构台 (F2)"按钮控制显隐
+    arch_window = None
+    console_window = None
+    for obj in roots:
+        if obj.objectName() == "architectureWindow":
+            arch_window = obj
+        else:
+            console_window = obj
+    if console_window is not None and arch_window is not None:
+        console_window.setProperty("archWindow", arch_window)
 
     scope.start()
     return app.exec()
@@ -46,6 +63,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 
 
 
