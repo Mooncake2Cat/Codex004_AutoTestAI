@@ -10,6 +10,8 @@ ApplicationWindow {
     // 仪器坞：各仪器格子可见性（阶段3 为固定两格；更多仪器时按 2×2/标签页扩展）
     property bool scopeVisible: true
     property bool powerVisible: true
+    // 示波器参数面板：可整体收起（把空间让给波形）；高度按页自适应，避免空白
+    property bool showScopeSettings: true
     width: Math.round(Screen.width * 0.72)
     height: Math.round(Screen.height * 0.70)
     x: Math.round((Screen.width - width) / 2)
@@ -75,6 +77,19 @@ ApplicationWindow {
         couplingCombo.currentIndex = root.couplingValues.indexOf(scope.channelCoupling(ch))
         probeCombo.currentIndex = [1, 10, 100].indexOf(scope.channelProbe(ch))
         offsetSpin.value = Math.round(scope.channelOffset(ch) * 1000)
+    }
+
+    // 示波器设置面板：按当前页返回紧凑高度（px）
+    function settingsPanelHeight(page) {
+        switch (page) {
+        case 0: return 136;   // 垂直
+        case 1: return 104;   // 水平
+        case 2: return 120;   // 触发
+        case 3: return 104;   // 采集
+        case 4: return 132;   // 测量
+        case 5: return 118;   // 信号源
+        default: return 120;
+        }
     }
 
     // 流程步骤（左区，只读展示）
@@ -355,6 +370,14 @@ ApplicationWindow {
                                         text: scope.simulationMode ? qsTr("（仿真）") : qsTr("（真机）")
                                         color: "#8b98a5"; font.pixelSize: 10
                                     }
+                                    Button {
+                                        text: qsTr("参数")
+                                        checkable: true
+                                        checked: root.showScopeSettings
+                                        focusPolicy: Qt.NoFocus
+                                        font.pixelSize: 10
+                                        onClicked: root.showScopeSettings = checked
+                                    }
                                     Item { Layout.fillWidth: true }
                                     Label {
                                         Layout.fillWidth: true
@@ -581,6 +604,8 @@ ApplicationWindow {
         TabBar {
             id: ctrlTabs
             Layout.fillWidth: true
+            Layout.preferredHeight: 30
+            visible: root.showScopeSettings
             TabButton { text: qsTr("垂直") }
             TabButton { text: qsTr("水平") }
             TabButton { text: qsTr("触发") }
@@ -591,21 +616,23 @@ ApplicationWindow {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 168
-            Layout.minimumHeight: 110
+            Layout.preferredHeight: root.settingsPanelHeight(ctrlTabs.currentIndex)
+            Layout.minimumHeight: 92
+            visible: root.showScopeSettings
             color: "#f6f8fa"
             border.color: "#d0d7de"
             radius: 4
 
             StackLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 8
                 currentIndex: ctrlTabs.currentIndex
 
                 // ---------- 垂直 ----------
                 RowLayout {
-                    spacing: 22
+                    spacing: 18
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("通道"); font.bold: true }
                         RowLayout {
                             spacing: 4
@@ -624,6 +651,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("显示"); font.bold: true }
                         Switch {
                             id: chEnableSwitch
@@ -637,6 +665,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("垂直档位"); font.bold: true }
                         ComboBox {
                             id: vdivCombo
@@ -653,6 +682,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("偏移 (mV)"); font.bold: true }
                         SpinBox {
                             id: offsetSpin
@@ -669,6 +699,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("带宽限制"); font.bold: true }
                         Switch {
                             id: chBwSwitch
@@ -681,8 +712,9 @@ ApplicationWindow {
 
                 // ---------- 水平 ----------
                 RowLayout {
-                    spacing: 24
+                    spacing: 18
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("时基 (s/div)"); font.bold: true }
                         ComboBox {
                             Layout.preferredWidth: 130
@@ -692,6 +724,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("水平位置 (µs)"); font.bold: true }
                         SpinBox {
                             from: -5000; to: 5000; stepSize: 10
@@ -701,6 +734,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("当前时基"); font.bold: true }
                         Label { text: scope.timebaseText; font.pixelSize: 14 }
                         Label { text: qsTr("(满屏 10 格 = ") + (scope.timeScale() * 10 * 1000).toFixed(3) + " ms)"; color: "#57606a" }
@@ -710,8 +744,9 @@ ApplicationWindow {
 
                 // ---------- 触发 ----------
                 RowLayout {
-                    spacing: 22
+                    spacing: 18
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("触发模式"); font.bold: true }
                         ComboBox {
                             Layout.preferredWidth: 110
@@ -721,6 +756,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("触发源"); font.bold: true }
                         ComboBox {
                             Layout.preferredWidth: 100
@@ -730,6 +766,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("边沿斜率"); font.bold: true }
                         ComboBox {
                             Layout.preferredWidth: 110
@@ -739,6 +776,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("触发电平 (mV)"); font.bold: true }
                         SpinBox {
                             from: -10000; to: 10000; stepSize: 10
@@ -748,6 +786,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("操作"); font.bold: true }
                         Button { text: qsTr("强制触发"); onClicked: scope.forceTrigger() }
                     }
@@ -756,8 +795,9 @@ ApplicationWindow {
 
                 // ---------- 采集 ----------
                 RowLayout {
-                    spacing: 16
+                    spacing: 18
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("采集中断"); font.bold: true }
                         RowLayout {
                             spacing: 6
@@ -767,6 +807,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("自动设置 / 清除"); font.bold: true }
                         RowLayout {
                             spacing: 6
@@ -775,6 +816,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("当前状态"); font.bold: true }
                         Label { text: scope.running ? qsTr("运行中 (RUN)") : qsTr("已停止 (STOP)"); font.pixelSize: 14 }
                         Label { text: qsTr("时基 ") + scope.timebaseText; color: "#57606a" }
@@ -811,8 +853,9 @@ ApplicationWindow {
 
                 // ---------- 信号源（AFG，DHO924S 内置） ----------
                 RowLayout {
-                    spacing: 22
+                    spacing: 18
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("波形"); font.bold: true }
                         ComboBox {
                             Layout.preferredWidth: 110
@@ -822,6 +865,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("频率 (Hz)"); font.bold: true }
                         SpinBox {
                             from: 1; to: 25000000; stepSize: 100; editable: true
@@ -830,6 +874,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("幅度 (mVpp)"); font.bold: true }
                         SpinBox {
                             from: 10; to: 5000; stepSize: 10; editable: true
@@ -838,6 +883,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("偏移 (mV)"); font.bold: true }
                         SpinBox {
                             from: -2500; to: 2500; stepSize: 10; editable: true
@@ -846,6 +892,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("输出"); font.bold: true }
                         Switch {
                             text: qsTr("开启 AFG")
@@ -1065,6 +1112,7 @@ ApplicationWindow {
         function onReportChanged() { root.refreshReport() }
     }
 }
+
 
 
 
