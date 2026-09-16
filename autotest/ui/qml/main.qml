@@ -302,6 +302,7 @@ ApplicationWindow {
             // ---------- 中区：仪器坞（示波器仪器格） ----------
             Rectangle {
                 SplitView.fillWidth: true
+                clip: true
                 color: "transparent"
 
                 ColumnLayout {
@@ -336,7 +337,9 @@ ApplicationWindow {
                         Rectangle {
                             id: scopeCell
                             SplitView.fillHeight: true
+                            SplitView.minimumHeight: 300
                             visible: root.scopeVisible
+                            clip: true
                             color: "#0d1117"
                             border.color: "#30363d"
                             radius: 4
@@ -367,7 +370,7 @@ ApplicationWindow {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.minimumHeight: 260
+            Layout.minimumHeight: 120
             spacing: 8
 
             Rectangle {
@@ -510,9 +513,16 @@ ApplicationWindow {
                 border.color: "#30363d"
                 radius: 4
 
-                ColumnLayout {
+                ScrollView {
+                    id: readoutScroll
                     anchors.fill: parent
                     anchors.margins: 10
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+                    ColumnLayout {
+                    width: readoutScroll.availableWidth
                     spacing: 6
 
                     Label { text: qsTr("自动测量"); color: "#e6edf3"; font.bold: true }
@@ -555,12 +565,13 @@ ApplicationWindow {
                         }
                     }
 
-                    Item { Layout.fillHeight: true }
                     Label {
+                        Layout.fillWidth: true
                         text: qsTr("提示：本屏不显示波形（真机波形下载未接入）；\n右侧读数为真机轮询值，面板命令直接下发真机。")
                         color: "#8b98a5"
                         font.pixelSize: 10
                         wrapMode: Text.Wrap
+                    }
                     }
                 }
             }
@@ -580,7 +591,8 @@ ApplicationWindow {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 176
+            Layout.preferredHeight: 168
+            Layout.minimumHeight: 110
             color: "#f6f8fa"
             border.color: "#d0d7de"
             radius: 4
@@ -852,8 +864,10 @@ ApplicationWindow {
                             // ---------- 仪器格 2：直流电源（虚拟 SPD3303X-E） ----------
                             Rectangle {
                                 id: powerCell
-                                SplitView.preferredHeight: 210
+                                SplitView.preferredHeight: 200
+                                SplitView.minimumHeight: 140
                                 visible: root.powerVisible
+                                clip: true
                                 color: "#0d1117"
                                 border.color: "#30363d"
                                 radius: 4
@@ -1051,6 +1065,9 @@ ApplicationWindow {
         function onReportChanged() { root.refreshReport() }
     }
 }
+
+
+
 
 
 
