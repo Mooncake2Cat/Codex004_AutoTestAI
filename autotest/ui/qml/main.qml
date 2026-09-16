@@ -1,4 +1,4 @@
-﻿import QtQuick
+import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
@@ -614,7 +614,7 @@ ApplicationWindow {
             TabButton { text: qsTr("信号源") }
         }
 
-﻿        Rectangle {
+        Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: root.settingsPanelHeight(ctrlTabs.currentIndex)
             Layout.minimumHeight: 60
