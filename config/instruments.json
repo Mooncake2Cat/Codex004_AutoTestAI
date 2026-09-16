@@ -1,0 +1,40 @@
+﻿{
+  "instruments": [
+    {
+      "id": "scope1",
+      "name": "示波器",
+      "model": "Rigol DHO924S",
+      "type": "rigol_dho",
+      "panel": "ScopeInstrument",
+      "simulate": true,
+      "visible": true,
+      "capabilities": ["scope"],
+      "transport": {
+        "kind": "tcp_scpi",
+        "host": "192.168.10.16",
+        "port": 5555,
+        "timeout": 3.0,
+        "terminator": "\n"
+      },
+      "options": { "channels": 4 }
+    },
+    {
+      "id": "power1",
+      "name": "直流电源",
+      "model": "Siglent SPD3303X-E",
+      "type": "siglent_spd3303x",
+      "panel": "PowerSupplyInstrument",
+      "simulate": true,
+      "visible": true,
+      "capabilities": ["power"],
+      "transport": {
+        "kind": "tcp_scpi",
+        "host": "192.168.1.50",
+        "port": 5025,
+        "timeout": 3.0,
+        "terminator": "\n"
+      },
+      "options": { "channels": 3 }
+    }
+  ]
+}

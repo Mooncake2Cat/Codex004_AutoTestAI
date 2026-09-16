@@ -11,6 +11,7 @@ def main() -> int:
     from PySide6.QtQml import QQmlApplicationEngine
 
     from .controller import TestController
+    from .panels.power_panel import PowerPanel
     from .scope_panel import ScopePanel
     from .trace_view import TraceBridge
 
@@ -19,10 +20,15 @@ def main() -> int:
 
     controller = TestController()
     scope = ScopePanel()
+    power = PowerPanel(instrument_id="power1", channels=3)
     trace = TraceBridge()
+    # 电源面板：命令/查询经控制器下发到 HAL 仪器（阶段3 为虚拟电源）
+    power.setCommandSink(lambda cmd: controller.sendInstrumentCommand("power1", cmd))
+    power.setQuerySink(lambda cmd: controller.queryInstrument("power1", cmd))
     # 持有 Python 引用，避免被 GC
     controller._scope = scope
     controller._trace = trace
+    controller._power = power
     scope.setCommandSink(controller.sendScopeCommand)
     scope.setMeasureSink(controller.queryScopeItem)
     scope.setWaveformSink(controller.readScopeWaveform)
@@ -33,6 +39,7 @@ def main() -> int:
     engine.rootContext().setContextProperty("controller", controller)
     engine.rootContext().setContextProperty("scope", scope)
     engine.rootContext().setContextProperty("trace", trace)
+    engine.rootContext().setContextProperty("power", power)
 
     qml_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qml")
     arch_path = os.path.join(qml_dir, "architecture.qml")
@@ -58,11 +65,13 @@ def main() -> int:
         console_window.setProperty("archWindow", arch_window)
 
     scope.start()
+    power.start()
     return app.exec()
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 
 
 

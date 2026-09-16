@@ -7,6 +7,9 @@ ApplicationWindow {
     id: root
     // 默认约为屏幕面积的 1/2，居中；每次启动按默认几何（不记忆位置）
     property var archWindow: null
+    // 仪器坞：各仪器格子可见性（阶段3 为固定两格；更多仪器时按 2×2/标签页扩展）
+    property bool scopeVisible: true
+    property bool powerVisible: true
     width: Math.round(Screen.width * 0.72)
     height: Math.round(Screen.height * 0.70)
     x: Math.round((Screen.width - width) / 2)
@@ -97,6 +100,12 @@ ApplicationWindow {
         scope.setPollChannel(root.selectedChannel)
         refreshFlow()
         refreshReport()
+        // 仪器坞：按注册表初始化各仪器可见性
+        var list = controller.instruments()
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].panel === "ScopeInstrument") root.scopeVisible = list[i].visible
+            if (list[i].panel === "PowerSupplyInstrument") root.powerVisible = list[i].visible
+        }
     }
 
     // ================= 顶部标题栏 =================
@@ -204,8 +213,22 @@ ApplicationWindow {
 
                     RowLayout {
                         spacing: 6
-                        Button { text: qsTr("加电"); onClicked: controller.manualAction("power_on") }
-                        Button { text: qsTr("断电"); onClicked: controller.manualAction("power_off") }
+                        Button {
+                            text: qsTr("加电")
+                            onClicked: {
+                                power.setChannel(1)
+                                power.setOutput(true)
+                                controller.manualAction("power_on")
+                            }
+                        }
+                        Button {
+                            text: qsTr("断电")
+                            onClicked: {
+                                power.setChannel(1)
+                                power.setOutput(false)
+                                controller.manualAction("power_off")
+                            }
+                        }
                         Button { text: qsTr("测波形"); onClicked: scope.setWaveformOn(true) }
                         Item { Layout.fillWidth: true }
                     }
@@ -287,11 +310,58 @@ ApplicationWindow {
 
                     RowLayout {
                         Label { text: qsTr("仪器坞"); font.bold: true; color: "#24292f" }
-                        CheckBox { text: qsTr("示波器 DHO924S"); checked: true }
-                        CheckBox { text: qsTr("虚拟电源 SPD3303X-E（阶段3）"); enabled: false }
+                        CheckBox {
+                            text: qsTr("示波器 DHO924S")
+                            checked: root.scopeVisible
+                            onToggled: { root.scopeVisible = checked; controller.setInstrumentVisible("scope1", checked) }
+                        }
+                        CheckBox {
+                            text: qsTr("直流电源 SPD3303X-E（虚拟）")
+                            checked: root.powerVisible
+                            onToggled: { root.powerVisible = checked; controller.setInstrumentVisible("power1", checked) }
+                        }
                         Item { Layout.fillWidth: true }
-                        Label { text: qsTr("阶段3：仪器格可勾选显示、分隔条调整大小"); color: "#8b98a5"; font.pixelSize: 10 }
+                        Label {
+                            text: qsTr("上下分栏可拖拽；仪器数 >4 时自动改为 2×2 / 标签页")
+                            color: "#8b98a5"; font.pixelSize: 10
+                        }
                     }
+
+                    // ---------- 仪器格 1：示波器（阶段3：包成仪器格） ----------
+                    SplitView {
+                        orientation: Qt.Vertical
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        Rectangle {
+                            id: scopeCell
+                            SplitView.fillHeight: true
+                            visible: root.scopeVisible
+                            color: "#0d1117"
+                            border.color: "#30363d"
+                            radius: 4
+
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                spacing: 4
+
+                                RowLayout {
+                                    Label { text: qsTr("示波器 · Rigol DHO924S"); color: "#e6edf3"; font.bold: true }
+                                    Label {
+                                        text: scope.simulationMode ? qsTr("（仿真）") : qsTr("（真机）")
+                                        color: "#8b98a5"; font.pixelSize: 10
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Label {
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Text.AlignRight
+                                        elide: Text.ElideRight
+                                        text: scope.commandText.length > 0 ? scope.commandText : "—"
+                                        color: "#8b98a5"; font.pixelSize: 9
+                                        font.family: "Consolas, monospace"
+                                    }
+                                }
 
         // ================= 波形屏 + 读数 =================
         RowLayout {
@@ -776,6 +846,93 @@ ApplicationWindow {
             }
         }
 
+                                }
+                            }
+
+                            // ---------- 仪器格 2：直流电源（虚拟 SPD3303X-E） ----------
+                            Rectangle {
+                                id: powerCell
+                                SplitView.preferredHeight: 210
+                                visible: root.powerVisible
+                                color: "#0d1117"
+                                border.color: "#30363d"
+                                radius: 4
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 6
+
+                                    RowLayout {
+                                        Label { text: qsTr("直流电源 · Siglent SPD3303X-E"); color: "#e6edf3"; font.bold: true }
+                                        Label { text: qsTr("（虚拟仪器）"); color: "#8b98a5"; font.pixelSize: 10 }
+                                        Item { Layout.fillWidth: true }
+                                        Label {
+                                            Layout.preferredWidth: 300
+                                            horizontalAlignment: Text.AlignRight
+                                            elide: Text.ElideRight
+                                            text: power.commandText.length > 0 ? power.commandText : "—"
+                                            color: "#8b98a5"; font.pixelSize: 9
+                                            font.family: "Consolas, monospace"
+                                        }
+                                    }
+
+                                    RowLayout {
+                                        spacing: 10
+                                        Label { text: qsTr("通道") }
+                                        ComboBox {
+                                            Layout.preferredWidth: 80
+                                            model: ["CH1", "CH2", "CH3"]
+                                            currentIndex: power.channel - 1
+                                            onActivated: power.setChannel(index + 1)
+                                        }
+                                        Switch {
+                                            text: qsTr("输出")
+                                            checked: power.outputOn
+                                            onClicked: power.setOutput(checked)
+                                        }
+                                        Label { text: qsTr("设定电压 (mV)") }
+                                        SpinBox {
+                                            from: 0; to: 32000; stepSize: 100; editable: true
+                                            value: Math.round(power.voltage * 1000)
+                                            onValueModified: power.setVoltage(value / 1000.0)
+                                        }
+                                        Label { text: qsTr("设定电流 (mA)") }
+                                        SpinBox {
+                                            from: 0; to: 5000; stepSize: 10; editable: true
+                                            value: Math.round(power.current * 1000)
+                                            onValueModified: power.setCurrent(value / 1000.0)
+                                        }
+                                        Item { Layout.fillWidth: true }
+                                    }
+
+                                    RowLayout {
+                                        spacing: 16
+                                        Label {
+                                            text: qsTr("实测电压：") + power.measuredVoltage.toFixed(3) + " V"
+                                            color: "#d7e2ea"; font.family: "Consolas, monospace"
+                                        }
+                                        Label {
+                                            text: qsTr("实测电流：") + power.measuredCurrent.toFixed(4) + " A"
+                                            color: "#d7e2ea"; font.family: "Consolas, monospace"
+                                        }
+                                        Label {
+                                            text: power.outputOn ? qsTr("输出：ON") : qsTr("输出：OFF")
+                                            color: power.outputOn ? "#3fb950" : "#8b98a5"
+                                        }
+                                        Item { Layout.fillWidth: true }
+                                        Button { text: qsTr("读取一次"); onClicked: power.refresh() }
+                                    }
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: qsTr("说明：阶段3 为虚拟电源（SCPI 已按鼎阳 SPD 系列常见写法实现，待真机核对）；加电/断电按钮随后接入。")
+                                        color: "#8b98a5"; font.pixelSize: 10; wrapMode: Text.Wrap
+                                    }
+                                }
+                            }
+
+                        }
                 }
             }
 
@@ -894,6 +1051,8 @@ ApplicationWindow {
         function onReportChanged() { root.refreshReport() }
     }
 }
+
+
 
 
 

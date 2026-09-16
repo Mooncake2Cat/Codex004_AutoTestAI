@@ -22,6 +22,7 @@ class TestController(QObject):
     lastCommandChanged = Signal(str)
     flowChanged = Signal()
     reportChanged = Signal()
+    instrumentsChanged = Signal()
 
     def __init__(
         self,
@@ -38,6 +39,8 @@ class TestController(QObject):
         self._store = None
         self._last_result = None
         self._last_command = ""
+        self._instrument_defs = []
+        self._visible = {}
         self._scope_lock = threading.Lock()
         self._load_config()
 
@@ -50,14 +53,10 @@ class TestController(QObject):
     def instrumentInfo(self) -> str:
         """当前配置的仪器摘要（用于界面显示，只读）。"""
         parts = []
-        for name, icfg in self._config.get("instruments", {}).items():
-            kind = icfg.get("type", "mock")
-            if kind == "rigol_dho":
-                parts.append("%s: rigol_dho %s:%s" % (name, icfg.get("host"), icfg.get("port")))
-            elif kind == "mock":
-                parts.append("%s: mock（DHO924S 仿真）" % name)
-            else:
-                parts.append("%s: %s" % (name, kind))
+        for cfg in self._instrument_defs:
+            kind = cfg.get("type", "")
+            mode = "仿真" if cfg.get("simulate") else "真机"
+            parts.append("%s(%s/%s)" % (cfg.get("model") or cfg.get("id"), kind, mode))
         return " | ".join(parts) if parts else "（未配置仪器）"
 
     @Property(bool, notify=flowChanged)
@@ -72,9 +71,9 @@ class TestController(QObject):
     @Property(bool, constant=True)
     def usesSimulation(self) -> bool:
         """配置的示波器是否为 mock（无真机）——决定界面波形/读数的数据源。"""
-        for _name, icfg in self._config.get("instruments", {}).items():
-            if icfg.get("type") == "rigol_dho":
-                return False
+        for cfg in self._instrument_defs:
+            if cfg.get("type") == "rigol_dho":
+                return bool(cfg.get("simulate", False))
         return True
 
     @Property(str, notify=lastCommandChanged)
@@ -89,8 +88,28 @@ class TestController(QObject):
         from ..hal.factory import create_instrument
 
         self._config = load_app_config(self._config_path)
-        for name, icfg in self._config.get("instruments", {}).items():
-            self._instruments[name] = create_instrument(name, icfg)
+
+        # 仪器来源：注册表 config/instruments.json（推荐，支持多仪器）；
+        # 无注册表时回退到旧的 app_config.json -> instruments 扁平配置。
+        from ..core.config import load_instruments
+
+        defs = load_instruments()
+        if defs:
+            for cfg in defs:
+                iid = cfg.get("id")
+                if not iid:
+                    continue
+                self._instrument_defs.append(cfg)
+                self._instruments[iid] = create_instrument(iid, cfg)
+        else:
+            for name, icfg in self._config.get("instruments", {}).items():
+                cfg = dict(icfg)
+                cfg.setdefault("id", name)
+                cfg.setdefault("name", name)
+                self._instrument_defs.append(cfg)
+                self._instruments[name] = create_instrument(name, icfg)
+
+        self._visible = {cfg["id"]: bool(cfg.get("visible", True)) for cfg in self._instrument_defs}
 
         db_path = self._config.get("data", {}).get("db_path", "data/test.db")
         self._store = LocalStore(db_path)
@@ -163,17 +182,54 @@ class TestController(QObject):
                 info["result"] = str(exc)
                 info["status"] = "error"
 
-    # ---------- 示波器面板 -> 真机 SCPI 下发 ----------
-    def _scope_instrument(self):
-        """返回配置为 rigol_dho 的仪器；mock/未配置时返回 None。"""
-        for name, icfg in self._config.get("instruments", {}).items():
-            if icfg.get("type") == "rigol_dho":
-                return self._instruments.get(name)
+    # ---------- 仪器面板 -> 仪器命令下发 ----------
+    def _instrument_def(self, iid: str):
+        for cfg in self._instrument_defs:
+            if cfg.get("id") == iid:
+                return cfg
         return None
+
+    def _scope_instrument_id(self):
+        for cfg in self._instrument_defs:
+            if cfg.get("type") == "rigol_dho":
+                return cfg.get("id")
+        return None
+
+    def _scope_instrument(self):
+        """返回示波器仪器实例（真机或仿真）；未配置时返回 None。"""
+        iid = self._scope_instrument_id()
+        return self._instruments.get(iid) if iid else None
+
+    def _dispatch_instrument_command(self, iid: str, command: str) -> str:
+        """通用命令下发：真机写命令后回读错误队列；仿真仪器只应用并回显。"""
+        inst = self._instruments.get(iid)
+        if inst is None:
+            return "未注册仪器 %s：%s" % (iid, command)
+        is_mock = type(inst).__name__.startswith("Mock")
+        label = "仿真" if is_mock else "真机"
+        try:
+            with self._scope_lock:
+                if getattr(inst, "_sock", None) is None:
+                    inst.initialize()
+                if command.endswith("?"):
+                    resp = inst.query(command)
+                    return "%s %s ⇒ %s" % (label, command, resp.strip())
+                inst.write(command)
+                if is_mock:
+                    return "%s %s ✓（虚拟仪器）" % (label, command)
+                try:
+                    err = inst.query(":SYSTem:ERRor?").strip()
+                except Exception:  # noqa: BLE001
+                    err = ""
+                if err and not err.startswith("0"):
+                    return "%s %s ⚠ 错误队列: %s" % (label, command, err)
+                return "%s %s ✓" % (label, command)
+        except Exception as exc:  # noqa: BLE001
+            return "下发失败 %s：%s" % (command, exc)
 
     @Slot(str, result=str)
     def sendScopeCommand(self, command: str) -> str:
-        """把界面产生的 SCPI 命令下发到真机；仿真模式下只回显。"""
+        """示波器面板命令（兼容旧接口；内部走通用下发）。"""
         command = (command or "").strip()
         if not command:
             return ""
@@ -186,31 +242,70 @@ class TestController(QObject):
         return text
 
     def _dispatch_scope_command(self, command: str) -> str:
-        inst = self._scope_instrument()
+        iid = self._scope_instrument_id()
+        if iid is None:
+            return "未配置示波器仪器: %s" % command
+        return self._dispatch_instrument_command(iid, command)
+
+    # ---------- 仪器注册表（多仪器） ----------
+    @Slot(result="QVariantList")
+    def instruments(self):
+        """仪器注册表信息（供仪器坞勾选显示与架构台展示）。"""
+        rows = []
+        for cfg in self._instrument_defs:
+            iid = cfg.get("id", "")
+            rows.append({
+                "id": iid,
+                "name": cfg.get("name", iid),
+                "model": cfg.get("model", ""),
+                "type": cfg.get("type", ""),
+                "panel": cfg.get("panel", ""),
+                "simulate": bool(cfg.get("simulate", False)),
+                "visible": bool(self._visible.get(iid, True)),
+                "capabilities": ",".join(cfg.get("capabilities", [])),
+                "connected": iid in self._instruments,
+            })
+        return rows
+
+    @Slot(str, result=bool)
+    def instrumentVisible(self, iid: str) -> bool:
+        return bool(self._visible.get(str(iid), True))
+
+    @Slot(str, bool)
+    def setInstrumentVisible(self, iid: str, visible: bool) -> None:
+        iid = str(iid)
+        self._visible[iid] = bool(visible)
+        bus.publish("ui", "action", "instrumentVisible:" + iid, detail="visible=%s" % bool(visible))
+        self.instrumentsChanged.emit()
+
+    @Slot(str, str, result=str)
+    def sendInstrumentCommand(self, iid: str, command: str) -> str:
+        """通用仪器命令下发（电源等非示波器仪器使用）。"""
+        command = (command or "").strip()
+        if not command:
+            return ""
+        info: dict = {}
+        with bus.span("glue", "slot", "instrumentCommand", detail="%s %s" % (iid, command), info=info):
+            text = self._dispatch_instrument_command(str(iid), command)
+            info["result"] = text
+        self._last_command = text
+        self.lastCommandChanged.emit(text)
+        return text
+
+    @Slot(str, str, result=str)
+    def queryInstrument(self, iid: str, command: str) -> str:
+        """通用仪器查询（返回原始字符串；失败返回空串）。"""
+        inst = self._instruments.get(str(iid))
         if inst is None:
-            text = "已应用(仿真): %s" % command
-        else:
+            return ""
+        with bus.quiet():
             try:
                 with self._scope_lock:
                     if getattr(inst, "_sock", None) is None:
                         inst.initialize()
-                    if command.endswith("?"):
-                        resp = inst.query(command)
-                        text = "真机 %s ⇒ %s" % (command, resp.strip())
-                    else:
-                        inst.write(command)
-                        # 写命令后查一次错误队列：命令拼写错误会立刻暴露，便于核对手册
-                        try:
-                            err = inst.query(":SYSTem:ERRor?").strip()
-                        except Exception:  # noqa: BLE001
-                            err = ""
-                        if err and not err.startswith("0"):
-                            text = "真机 %s ⚠ 错误队列: %s" % (command, err)
-                        else:
-                            text = "真机 %s ✓" % command
-            except Exception as exc:  # noqa: BLE001
-                text = "下发失败 %s：%s" % (command, exc)
-        return text
+                    return inst.query(command).strip()
+            except Exception:  # noqa: BLE001
+                return ""
 
     @Slot(str, int, result=str)
     def queryScopeItem(self, item: str, channel: int) -> str:
@@ -317,6 +412,8 @@ class TestController(QObject):
                 self._set_status("保存报告失败: %s" % exc)
                 info["result"] = str(exc)
                 info["status"] = "error"
+
+
 
 
 
