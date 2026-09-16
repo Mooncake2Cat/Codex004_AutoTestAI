@@ -82,13 +82,13 @@ ApplicationWindow {
     // 示波器设置面板：按当前页返回紧凑高度（px）
     function settingsPanelHeight(page) {
         switch (page) {
-        case 0: return 136;   // 垂直
-        case 1: return 104;   // 水平
-        case 2: return 120;   // 触发
-        case 3: return 104;   // 采集
-        case 4: return 132;   // 测量
-        case 5: return 118;   // 信号源
-        default: return 120;
+        case 0: return 118;   // 垂直
+        case 1: return 90;    // 水平
+        case 2: return 104;   // 触发
+        case 3: return 90;    // 采集
+        case 4: return 112;   // 测量
+        case 5: return 100;   // 信号源
+        default: return 100;
         }
     }
 
@@ -617,21 +617,28 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: root.settingsPanelHeight(ctrlTabs.currentIndex)
-            Layout.minimumHeight: 92
+            Layout.minimumHeight: 78
             visible: root.showScopeSettings
             color: "#f6f8fa"
             border.color: "#d0d7de"
             radius: 4
 
+            // Pane: compact font container (children inherit font.pixelSize)
+            Pane {
+                anchors.fill: parent
+                padding: 0
+                font.pixelSize: 11
+                background: null
             StackLayout {
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: 4
                 currentIndex: ctrlTabs.currentIndex
 
                 // ---------- 垂直 ----------
                 RowLayout {
-                    spacing: 18
+                    spacing: 8
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("通道"); font.bold: true }
                         RowLayout {
@@ -651,23 +658,30 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("显示"); font.bold: true }
                         Switch {
+                            padding: 0
+                            spacing: 4
                             id: chEnableSwitch
                             text: qsTr("开启")
                             onClicked: scope.setChannelEnabled(root.selectedChannel, checked)
                         }
                         Switch {
+                            padding: 0
+                            spacing: 4
                             id: chInvertSwitch
                             text: qsTr("反相")
                             onClicked: scope.setChannelInvert(root.selectedChannel, checked)
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("垂直档位"); font.bold: true }
                         ComboBox {
+                            padding: 2
                             id: vdivCombo
                             Layout.preferredWidth: 120
                             model: root.vDivLabels
@@ -675,6 +689,7 @@ ApplicationWindow {
                         }
                         Label { text: qsTr("耦合") }
                         ComboBox {
+                            padding: 2
                             id: couplingCombo
                             Layout.preferredWidth: 120
                             model: root.couplingValues
@@ -682,9 +697,11 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("偏移 (mV)"); font.bold: true }
                         SpinBox {
+                            padding: 2
                             id: offsetSpin
                             from: -10000; to: 10000; stepSize: 10
                             editable: true
@@ -692,6 +709,7 @@ ApplicationWindow {
                         }
                         Label { text: qsTr("探头") }
                         ComboBox {
+                            padding: 2
                             id: probeCombo
                             Layout.preferredWidth: 120
                             model: ["1x", "10x", "100x"]
@@ -699,9 +717,12 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("带宽限制"); font.bold: true }
                         Switch {
+                            padding: 0
+                            spacing: 4
                             id: chBwSwitch
                             text: qsTr("20MHz")
                             onClicked: scope.setChannelBwLimit(root.selectedChannel, checked)
@@ -712,11 +733,13 @@ ApplicationWindow {
 
                 // ---------- 水平 ----------
                 RowLayout {
-                    spacing: 18
+                    spacing: 8
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("时基 (s/div)"); font.bold: true }
                         ComboBox {
+                            padding: 2
                             Layout.preferredWidth: 130
                             model: root.timeLabels
                             currentIndex: root.indexOfValue(root.timeValues, scope.timeScale())
@@ -724,9 +747,11 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("水平位置 (µs)"); font.bold: true }
                         SpinBox {
+                            padding: 2
                             from: -5000; to: 5000; stepSize: 10
                             editable: true
                             value: Math.round(scope.timeOffset() * 1000000)
@@ -734,6 +759,7 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("当前时基"); font.bold: true }
                         Label { text: scope.timebaseText; font.pixelSize: 14 }
@@ -744,11 +770,13 @@ ApplicationWindow {
 
                 // ---------- 触发 ----------
                 RowLayout {
-                    spacing: 18
+                    spacing: 8
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("触发模式"); font.bold: true }
                         ComboBox {
+                            padding: 2
                             Layout.preferredWidth: 110
                             model: root.sweepValues
                             currentIndex: root.sweepValues.indexOf(scope.triggerSweep())
@@ -756,9 +784,11 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("触发源"); font.bold: true }
                         ComboBox {
+                            padding: 2
                             Layout.preferredWidth: 100
                             model: ["CH1", "CH2", "CH3", "CH4"]
                             currentIndex: scope.triggerSource() - 1
@@ -766,9 +796,11 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("边沿斜率"); font.bold: true }
                         ComboBox {
+                            padding: 2
                             Layout.preferredWidth: 110
                             model: root.slopeLabels
                             currentIndex: root.slopeValues.indexOf(scope.triggerSlope())
@@ -776,9 +808,11 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("触发电平 (mV)"); font.bold: true }
                         SpinBox {
+                            padding: 2
                             from: -10000; to: 10000; stepSize: 10
                             editable: true
                             value: Math.round(scope.triggerLevel() * 1000)
@@ -786,36 +820,40 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("操作"); font.bold: true }
-                        Button { text: qsTr("强制触发"); onClicked: scope.forceTrigger() }
+                        Button { padding: 2; text: qsTr("强制触发"); onClicked: scope.forceTrigger() }
                     }
                     Item { Layout.fillWidth: true }
                 }
 
                 // ---------- 采集 ----------
                 RowLayout {
-                    spacing: 18
+                    spacing: 8
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("采集中断"); font.bold: true }
                         RowLayout {
                             spacing: 6
-                            Button { text: "RUN"; highlighted: scope.running; onClicked: scope.setRunning(true) }
-                            Button { text: "STOP"; highlighted: !scope.running; onClicked: scope.setRunning(false) }
-                            Button { text: "SINGLE"; onClicked: scope.singleShot() }
+                            Button { padding: 2; text: "RUN"; highlighted: scope.running; onClicked: scope.setRunning(true) }
+                            Button { padding: 2; text: "STOP"; highlighted: !scope.running; onClicked: scope.setRunning(false) }
+                            Button { padding: 2; text: "SINGLE"; onClicked: scope.singleShot() }
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("自动设置 / 清除"); font.bold: true }
                         RowLayout {
                             spacing: 6
-                            Button { text: qsTr("AUTO 自动设置"); onClicked: scope.autoSet() }
-                            Button { text: qsTr("清除显示"); onClicked: scope.clearScope() }
+                            Button { padding: 2; text: qsTr("AUTO 自动设置"); onClicked: scope.autoSet() }
+                            Button { padding: 2; text: qsTr("清除显示"); onClicked: scope.clearScope() }
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("当前状态"); font.bold: true }
                         Label { text: scope.running ? qsTr("运行中 (RUN)") : qsTr("已停止 (STOP)"); font.pixelSize: 14 }
@@ -831,11 +869,13 @@ ApplicationWindow {
                         Label { text: qsTr("测量项（点击开关）"); font.bold: true }
                         Item { Layout.fillWidth: true }
                         Switch {
+                            padding: 0
+                            spacing: 4
                             text: qsTr("统计")
                             checked: scope.measureStat
                             onToggled: scope.setMeasureStat(checked)
                         }
-                        Button { text: qsTr("复位统计"); onClicked: scope.measureReset() }
+                        Button { padding: 2; text: qsTr("复位统计"); onClicked: scope.measureReset() }
                     }
                     Flow {
                         Layout.fillWidth: true
@@ -853,11 +893,13 @@ ApplicationWindow {
 
                 // ---------- 信号源（AFG，DHO924S 内置） ----------
                 RowLayout {
-                    spacing: 18
+                    spacing: 8
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("波形"); font.bold: true }
                         ComboBox {
+                            padding: 2
                             Layout.preferredWidth: 110
                             model: root.afgLabels
                             currentIndex: root.afgValues.indexOf(scope.afgFunction())
@@ -865,36 +907,45 @@ ApplicationWindow {
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("频率 (Hz)"); font.bold: true }
                         SpinBox {
+                            padding: 2
                             from: 1; to: 25000000; stepSize: 100; editable: true
                             value: Math.round(scope.afgFrequency())
                             onValueModified: scope.setAfgFrequency(value)
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("幅度 (mVpp)"); font.bold: true }
                         SpinBox {
+                            padding: 2
                             from: 10; to: 5000; stepSize: 10; editable: true
                             value: Math.round(scope.afgAmplitude() * 1000)
                             onValueModified: scope.setAfgAmplitude(value / 1000.0)
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("偏移 (mV)"); font.bold: true }
                         SpinBox {
+                            padding: 2
                             from: -2500; to: 2500; stepSize: 10; editable: true
                             value: Math.round(scope.afgOffset() * 1000)
                             onValueModified: scope.setAfgOffset(value / 1000.0)
                         }
                     }
                     ColumnLayout {
+                    spacing: 2
                     Layout.alignment: Qt.AlignTop
                         Label { text: qsTr("输出"); font.bold: true }
                         Switch {
+                            padding: 0
+                            spacing: 4
                             text: qsTr("开启 AFG")
                             checked: scope.afgOutput()
                             onToggled: scope.setAfgOutput(checked)
@@ -903,6 +954,7 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
                 }
             }
+                }
         }
 
                                 }
@@ -1112,6 +1164,7 @@ ApplicationWindow {
         function onReportChanged() { root.refreshReport() }
     }
 }
+
 
 
 
