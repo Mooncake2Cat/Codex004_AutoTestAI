@@ -14,6 +14,9 @@ ApplicationWindow {
 
     signal clearRequested()
 
+    // 自动滚动：新日志到达时滚到最底部（可关闭）
+    property bool autoScroll: true
+
     // 分层配色（与操作台一致）
     function layerColor(layer) {
         if (layer === "ui") return "#58a6ff";
@@ -100,6 +103,11 @@ ApplicationWindow {
                 color: "#9fb3c8"
                 font.pixelSize: 11
             }
+            CheckBox {
+                text: qsTr("自动滚动")
+                checked: arch.autoScroll
+                onToggled: arch.autoScroll = checked
+            }
             Button {
                 text: qsTr("清空事件")
                 onClicked: { trace.clear(); arch.clearRequested() }
@@ -159,13 +167,15 @@ ApplicationWindow {
                         target: trace
                         function onEventLogged(ev) {
                             if (ev.layer !== card.layerKey) return
+                            // 全量保留（不再裁剪），最新日志追加在末尾
                             cardModel.append({
                                 "line": (ev.ts.length >= 23 ? ev.ts.substring(11, 23) : ev.ts)
                                         + "  " + ev.kind + "/" + ev.action
                                         + (ev.result.length > 0 ? " ⇒ " + ev.result : "")
                             })
-                            while (cardModel.count > 16) cardModel.remove(0)
                             card.layerCount += 1
+                            // 持续滚动到最新一条
+                            if (arch.autoScroll) Qt.callLater(cardList.positionViewAtEnd)
                         }
                     }
 
@@ -221,13 +231,16 @@ ApplicationWindow {
                         Rectangle { Layout.fillWidth: true; height: 1; color: "#21262d" }
 
                         ListView {
+                            id: cardList
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             model: cardModel
                             clip: true
                             spacing: 1
+                            // 滚动条：始终显示，便于查看历史日志
+                            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                             delegate: Label {
-                                width: ListView.view.width
+                                width: cardList.width - 14
                                 text: model.line
                                 color: "#8b98a5"
                                 font.pixelSize: 9
@@ -254,3 +267,4 @@ ApplicationWindow {
         }
     }
 }
+

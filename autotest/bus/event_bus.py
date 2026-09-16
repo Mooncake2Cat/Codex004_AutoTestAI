@@ -5,7 +5,8 @@
   - 纯标准库实现，**不依赖 PySide6**（HAL/核心层与无界面测试都能用）；
   - 上报失败绝不影响主流程（内部 try/except 吞掉异常）；
   - 线程安全：流程在后台线程执行，UI 在主线程读取；
-  - 支持"噪声上下文"：周期性轮询（波形/读数）只计数不存储，避免淹没关键日志。
+  - 支持"噪声上下文"：周期性轮询（波形/读数）只计数不存储，避免淹没关键日志；
+  - 环形缓冲默认 2000 条（界面各层卡片另有全量留存，见 architecture.qml）。
 """
 from __future__ import annotations
 
@@ -55,7 +56,7 @@ class LayerEvent:
 class EventBus:
     """事件总线：环形缓冲 + 订阅分发 + 统计。"""
 
-    def __init__(self, capacity: int = 500):
+    def __init__(self, capacity: int = 2000):
         self._capacity = int(capacity)
         self._events: deque = deque(maxlen=self._capacity)
         self._subs: List[Callable[[Dict[str, Any]], None]] = []
@@ -239,3 +240,5 @@ def trace(layer: str, kind: str, action: str, **kwargs) -> None:
 
 def span(layer: str, kind: str, action: str, **kwargs):
     return bus.span(layer, kind, action, **kwargs)
+
+
