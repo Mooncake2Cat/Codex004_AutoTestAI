@@ -1,0 +1,50 @@
+﻿{
+  "title": "验收记录",
+  "columns": ["序号", "测试项目", "测试分项", "明细项", "技术指标", "单位", "测试结果", "是否合格"],
+  "header_info": [
+    { "label": "产品名称", "value": "（演示）射频组件", "value_span": 3 },
+    { "label": "测试地点", "value": "（演示）实验室", "value_span": 3 },
+    { "label": "产品编号", "value": "DEMO-0001", "value_span": 3 },
+    { "label": "测试时间", "value": "", "value_span": 3, "auto": "finished_at" }
+  ],
+  "groups": [
+    {
+      "seq": 1,
+      "item": "工作正常性检查",
+      "sub_groups": [
+        {
+          "sub_item": "电源输出",
+          "rows": [
+            { "detail": "CH1 输出电压", "spec": "5.0±0.1", "unit": "V", "var": "vout" },
+            { "detail": "CH1 输出电流", "spec": "≤1.0", "unit": "A", "var": "iout" }
+          ]
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "item": "波形测量",
+      "sub_groups": [
+        {
+          "sub_item": "CH2 波形",
+          "rows": [
+            { "detail": "峰峰值 Vpp", "spec": "5.0±0.5", "unit": "V", "var": "vpp_ch2" },
+            { "detail": "频率", "spec": "5000±50", "unit": "Hz", "var": "freq_ch2" }
+          ]
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "item": "计算与判定",
+      "sub_groups": [
+        {
+          "sub_item": "计算结果",
+          "rows": [
+            { "detail": "Vpp×2", "spec": "9~11", "unit": "", "var": "vpp_x2" }
+          ]
+        }
+      ]
+    }
+  ]
+}

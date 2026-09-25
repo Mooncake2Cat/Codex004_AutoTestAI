@@ -12,6 +12,7 @@ ApplicationWindow {
     property bool powerVisible: true
     // 示波器参数面板：可整体收起（把空间让给波形）；高度按页自适应，避免空白
     property bool showScopeSettings: true
+    property string reportSummaryText: ""
     width: Math.round(Screen.width * 0.72)
     height: Math.round(Screen.height * 0.70)
     x: Math.round((Screen.width - width) / 2)
@@ -121,6 +122,7 @@ ApplicationWindow {
         reportModel.clear()
         var rows = controller.reportRows()
         for (var i = 0; i < rows.length; i++) reportModel.append(rows[i])
+        root.reportSummaryText = controller.reportSummary()
     }
 
     onSelectedChannelChanged: {
@@ -1228,37 +1230,80 @@ ApplicationWindow {
                     anchors.margins: 8
                     spacing: 6
 
-                    Label { text: qsTr("测试报表（总表）"); font.bold: true; color: "#24292f" }
+                    Label { text: qsTr("测试报表（验收记录）"); font.bold: true; color: "#24292f" }
                     Label {
                         Layout.fillWidth: true
-                        text: qsTr("阶段2：展示本次测量；阶段5 接入列映射、上下限判定与 HTML 导出")
-                        color: "#8b98a5"; font.pixelSize: 10; wrapMode: Text.Wrap
-                    }
-
-                    RowLayout {
-                        spacing: 4
-                        Label { text: qsTr("项目"); color: "#57606a"; font.pixelSize: 10; Layout.fillWidth: true }
-                        Label { text: qsTr("数值"); color: "#57606a"; font.pixelSize: 10; Layout.preferredWidth: 64 }
-                        Label { text: qsTr("单位"); color: "#57606a"; font.pixelSize: 10; Layout.preferredWidth: 38 }
-                        Label { text: qsTr("判定"); color: "#57606a"; font.pixelSize: 10; Layout.preferredWidth: 36 }
+                        text: root.reportSummaryText
+                        color: "#57606a"
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
                     }
 
                     ListView {
+                        id: reportList
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         model: reportModel
                         clip: true
-                        spacing: 2
-                        delegate: RowLayout {
-                            spacing: 4
-                            Label { text: model.name; color: "#24292f"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
-                            Label { text: model.value; color: "#24292f"; font.pixelSize: 11; Layout.preferredWidth: 64; elide: Text.ElideRight }
-                            Label { text: model.unit; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 38 }
-                            Label { text: model.verdict; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 36 }
+                        spacing: 3
+                        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                        delegate: Rectangle {
+                            width: reportList.width - 8
+                            height: 42
+                            color: model.passed ? "#f2fbf4" : "#fff5f5"
+                            border.color: model.passed ? "#b7e0c0" : "#f0b8b8"
+                            radius: 3
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: 4
+                                spacing: 1
+                                RowLayout {
+                                    spacing: 4
+                                    Label {
+                                        text: model.group + (model.sub ? " · " + model.sub : "")
+                                        color: "#57606a"; font.pixelSize: 10
+                                        Layout.fillWidth: true; elide: Text.ElideRight
+                                    }
+                                    Label {
+                                        text: model.verdict
+                                        color: model.passed ? "#1a7f37" : "#cf222e"
+                                        font.pixelSize: 10; font.bold: true
+                                    }
+                                }
+                                RowLayout {
+                                    spacing: 6
+                                    Label { text: model.detail; color: "#24292f"; font.pixelSize: 11; font.bold: true }
+                                    Label {
+                                        text: model.spec + (model.unit ? " " + model.unit : "")
+                                        color: "#8b98a5"; font.pixelSize: 10
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Label {
+                                        text: model.value + (model.unit ? " " + model.unit : "")
+                                        color: "#24292f"; font.pixelSize: 11
+                                        font.family: "Consolas, monospace"
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    Button { text: qsTr("导出 HTML"); onClicked: controller.saveReport("reports/report.html") }
+                    RowLayout {
+                        spacing: 4
+                        Button {
+                            text: qsTr("导出 HTML")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            onClicked: controller.saveReport("reports/report.html")
+                        }
+                        Button {
+                            text: qsTr("导出 Excel（预留）")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            onClicked: controller.saveReportExcel("reports/report.xlsx")
+                        }
+                        Item { Layout.fillWidth: true }
+                    }
                 }
             }
         }

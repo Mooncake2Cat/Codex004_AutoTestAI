@@ -1,27 +1,130 @@
-﻿{
+{
   "flow_id": "phase4-demo",
   "name": "阶段4演示：加电→测量→计算→判定→报表→断电",
-  "dut_info": { "dut": "演示被测件", "sn": "DEMO-P4-001" },
-  "test_conditions": { "temperature_c": 25, "operator": "prototype" },
+  "dut_info": {
+    "dut": "演示被测件",
+    "sn": "DEMO-P4-001"
+  },
+  "test_conditions": {
+    "temperature_c": 25,
+    "operator": "prototype"
+  },
   "steps": [
-    { "id": "s1", "type": "power_on", "instrument": "power1", "params": { "channel": 1 } },
-    { "id": "s2", "type": "action", "instrument": "power1", "action": "power.set_voltage",
-      "params": { "channel": 1, "volts": 5.0 } },
-    { "id": "s3", "type": "action", "instrument": "power1", "action": "power.set_current",
-      "params": { "channel": 1, "amps": 1.0 } },
-    { "id": "s4", "type": "wait", "seconds": 0.2 },
-    { "id": "s5", "type": "action", "instrument": "power1", "action": "power.measure_voltage",
-      "params": { "channel": 1 }, "name": "vout" },
-    { "id": "s6", "type": "action", "instrument": "scope1", "action": "scope.measure",
-      "params": { "item": "vpp", "channel": 2 }, "name": "vpp_ch2" },
-    { "id": "s7", "type": "action", "instrument": "scope1", "action": "scope.measure",
-      "params": { "item": "freq", "channel": 2 }, "name": "freq_ch2" },
-    { "id": "s8", "type": "compute", "algorithm": "mul",
-      "inputs": { "a": "$vpp_ch2", "b": 2 }, "output": "vpp_x2" },
-    { "id": "s9", "type": "limit_check", "variable": "vpp_x2", "lower": 9.0, "upper": 11.0 },
-    { "id": "s10", "type": "store", "variable": "vout", "name": "vout_stored", "unit": "V" },
-    { "id": "s11", "type": "report",
-      "mapping": { "vpp_ch2": "Vpp列", "freq_ch2": "频率列", "vpp_x2": "Vpp×2列" } },
-    { "id": "s12", "type": "power_off", "instrument": "power1", "params": { "channel": 1 } }
+    {
+      "id": "s1",
+      "type": "power_on",
+      "instrument": "power1",
+      "params": {
+        "channel": 1
+      }
+    },
+    {
+      "id": "s2",
+      "type": "action",
+      "instrument": "power1",
+      "action": "power.set_voltage",
+      "params": {
+        "channel": 1,
+        "volts": 5.0
+      }
+    },
+    {
+      "id": "s3",
+      "type": "action",
+      "instrument": "power1",
+      "action": "power.set_current",
+      "params": {
+        "channel": 1,
+        "amps": 1.0
+      }
+    },
+    {
+      "id": "s4",
+      "type": "wait",
+      "seconds": 0.2
+    },
+    {
+      "id": "s5",
+      "type": "action",
+      "instrument": "power1",
+      "action": "power.measure_voltage",
+      "params": {
+        "channel": 1
+      },
+      "name": "vout"
+    },
+    {
+      "id": "s5b",
+      "type": "action",
+      "instrument": "power1",
+      "action": "power.measure_current",
+      "params": {
+        "channel": 1
+      },
+      "name": "iout"
+    },
+    {
+      "id": "s6",
+      "type": "action",
+      "instrument": "scope1",
+      "action": "scope.measure",
+      "params": {
+        "item": "vpp",
+        "channel": 2
+      },
+      "name": "vpp_ch2"
+    },
+    {
+      "id": "s7",
+      "type": "action",
+      "instrument": "scope1",
+      "action": "scope.measure",
+      "params": {
+        "item": "freq",
+        "channel": 2
+      },
+      "name": "freq_ch2"
+    },
+    {
+      "id": "s8",
+      "type": "compute",
+      "algorithm": "mul",
+      "inputs": {
+        "a": "$vpp_ch2",
+        "b": 2
+      },
+      "output": "vpp_x2"
+    },
+    {
+      "id": "s9",
+      "type": "limit_check",
+      "variable": "vpp_x2",
+      "lower": 9.0,
+      "upper": 11.0
+    },
+    {
+      "id": "s10",
+      "type": "store",
+      "variable": "vout",
+      "name": "vout_stored",
+      "unit": "V"
+    },
+    {
+      "id": "s11",
+      "type": "report",
+      "mapping": {
+        "vpp_ch2": "Vpp列",
+        "freq_ch2": "频率列",
+        "vpp_x2": "Vpp×2列"
+      }
+    },
+    {
+      "id": "s12",
+      "type": "power_off",
+      "instrument": "power1",
+      "params": {
+        "channel": 1
+      }
+    }
   ]
 }

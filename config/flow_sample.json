@@ -54,6 +54,16 @@
       "name": "vout"
     },
     {
+      "id": "s5b",
+      "type": "action",
+      "instrument": "power1",
+      "action": "power.measure_current",
+      "params": {
+        "channel": 1
+      },
+      "name": "iout"
+    },
+    {
       "id": "s6",
       "type": "action",
       "instrument": "scope1",

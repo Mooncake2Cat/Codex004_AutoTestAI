@@ -1,4 +1,4 @@
-﻿"""QML <-> Python 桥接控制器。
+"""QML <-> Python 桥接控制器。
 
 通过 setContextProperty 暴露给 QML；QML 调用其 Slot，Python 侧通过 Signal
 把状态与测量结果推回界面，形成双向桥接。
@@ -45,6 +45,7 @@ class TestController(QObject):
         self._instrument_defs = []
         self._visible = {}
         self._control = ExecutionControl()
+        self._report_tpl = None
         self._flow_running = False
         self._current_step = ""
         self._scope_lock = threading.Lock()
@@ -522,19 +523,87 @@ class TestController(QObject):
         bus.publish("ui", "action", "manual:" + str(name), detail="阶段3/4 接入后生效")
         self._set_status("手动动作: %s（阶段3/4 接入后生效）" % name)
 
+    # ---------- 报表（阶段5：验收记录表样式，配置驱动） ----------
+    def _report_template(self):
+        """加载报表模板（config/report_template.json，缓存）。"""
+        if getattr(self, "_report_tpl", None) is None:
+            from ..core.config import load_json, resolve_path
+
+            try:
+                self._report_tpl = load_json(resolve_path("config/report_template.json"))
+            except Exception:  # noqa: BLE001
+                self._report_tpl = {}
+        return self._report_tpl
+
     @Slot(result="QVariantList")
     def reportRows(self):
-        """右侧报表总表数据（阶段2：展示本次测量；阶段5 增加列映射与判据）。"""
+        """右区报表行（按验收模板展开；无模板时回退为扁平测量）。"""
+        from ..report import acceptance as acc_build
+
+        if self._last_result is None:
+            return []
+        template = self._report_template()
+        if not template:
+            return [{
+                "group": "", "sub": "", "detail": m.name, "spec": "",
+                "unit": m.unit,
+                "value": "" if m.value is None else ("%.6g" % m.value),
+                "verdict": "—", "passed": False,
+            } for m in self._last_result.measurements]
+
+        report = acc_build.build_report(template, self._last_result.to_dict())
         rows = []
-        if self._last_result is not None:
-            for m in self._last_result.measurements:
-                rows.append({
-                    "name": m.name,
-                    "value": "" if m.value is None else ("%.6g" % m.value),
-                    "unit": m.unit,
-                    "verdict": "—",
-                })
+        for group in report.get("groups", []):
+            for sub in group.get("sub_groups", []):
+                for row in sub.get("rows", []):
+                    rows.append({
+                        "group": "%s %s" % (group.get("seq", ""), group.get("item", "")),
+                        "sub": sub.get("sub_item", ""),
+                        "detail": row.get("detail", ""),
+                        "spec": row.get("spec", ""),
+                        "unit": row.get("unit", ""),
+                        "value": row.get("display", ""),
+                        "verdict": "合格" if row.get("passed") else "不合格",
+                        "passed": bool(row.get("passed")),
+                    })
         return rows
+
+    @Slot(result=str)
+    def reportSummary(self) -> str:
+        """报表汇总文本（合计/合格/不合格）。"""
+        from ..report import acceptance as acc_build
+
+        if self._last_result is None:
+            return "尚未运行流程"
+        template = self._report_template()
+        if not template:
+            return ""
+        report = acc_build.build_report(template, self._last_result.to_dict())
+        s = report.get("summary", {})
+        return "合计 %s 项 / 合格 %s 项 / 不合格 %s 项%s" % (
+            s.get("total", 0), s.get("passed", 0), s.get("failed", 0),
+            "" if s.get("all_passed") else "（存在不合格项）")
+    @Slot(str, result=str)
+    def saveReportExcel(self, path: str = "reports/report.xlsx") -> str:
+        """Excel 导出（阶段5：接口预留，未实现时给出提示）。"""
+        from ..report import html_report as hr
+        from ..report.xlsx_export import ExcelExportNotImplemented
+
+        bus.publish("ui", "action", "saveReportExcel", detail=path)
+        if self._last_result is None:
+            self._set_status("没有可保存的结果")
+            return ""
+        try:
+            saved = hr.save_xlsx(self._last_result.to_dict(), path, template=self._report_template())
+            self._set_status("Excel 已保存: %s" % saved)
+            return saved
+        except ExcelExportNotImplemented:
+            self._set_status("Excel 输出接口已预留（当前阶段仅输出 HTML）")
+            return ""
+        except Exception as exc:  # noqa: BLE001
+            self._set_status("Excel 导出失败: %s" % exc)
+            return ""
+
     @Slot(str)
     def saveReport(self, path: str = "reports/report.html") -> None:
         from ..report.html_report import save
@@ -548,13 +617,14 @@ class TestController(QObject):
                 info["status"] = "skip"
                 return
             try:
-                saved = save(self._last_result.to_dict(), path)
+                saved = save(self._last_result.to_dict(), path, template=self._report_template())
                 self._set_status("报告已保存: %s" % saved)
                 info["result"] = saved
             except Exception as exc:  # noqa: BLE001
                 self._set_status("保存报告失败: %s" % exc)
                 info["result"] = str(exc)
                 info["status"] = "error"
+
 
 
 

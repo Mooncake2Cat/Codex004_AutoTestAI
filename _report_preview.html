@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang='zh-CN'><head><meta charset='utf-8'>
+<title>验收记录</title>
+<style>
+body { font-family: "Microsoft YaHei", "Segoe UI", sans-serif; margin: 24px; color: #1f2328; }
+h1 { font-size: 20px; text-align: center; margin: 0 0 6px 0; }
+.meta { text-align: center; color: #57606a; font-size: 12px; margin: 0 0 4px 0; }
+table { border-collapse: collapse; table-layout: fixed; width: 100%; }
+table.head { margin-top: 10px; }
+table.main { margin-top: 10px; }
+th, td { border: 1px solid #333333; padding: 4px 6px; font-size: 12px; vertical-align: middle; word-wrap: break-word; }
+thead th { background: #f2f2f2; font-weight: bold; text-align: center; }
+table.head th { background: #f2f2f2; font-weight: bold; text-align: center; }
+table.head td { text-align: left; }
+.center { text-align: center; }
+.num { text-align: right; }
+.pass { text-align: center; color: #1a7f37; font-weight: bold; }
+.fail { text-align: center; color: #cf222e; font-weight: bold; }
+.note { color: #57606a; font-size: 11px; margin-top: 8px; }
+</style></head><body>
+<h1>验收记录</h1>
+<p class='meta'>测试编号：phase4-demo-3164c248　状态：passed　合计 5 项，合格 4 项，不合格 1 项</p>
+<table class='head'><colgroup>
+<col style='width:12%'>
+<col style='width:38%'>
+<col style='width:12%'>
+<col style='width:38%'>
+</colgroup>
+<tr>
+<th>产品名称</th>
+<td colspan='1'>（演示）射频组件</td>
+<th>测试地点</th>
+<td colspan='1'>（演示）实验室</td>
+</tr>
+<tr>
+<th>产品编号</th>
+<td colspan='1'>DEMO-0001</td>
+<th>测试时间</th>
+<td colspan='1'>2026-09-25T17:04:41.805</td>
+</tr>
+</table>
+<table class='main'><colgroup>
+<col style='width:6%'>
+<col style='width:14%'>
+<col style='width:14%'>
+<col style='width:14%'>
+<col style='width:14%'>
+<col style='width:6%'>
+<col style='width:16%'>
+<col style='width:16%'>
+</colgroup>
+<thead><tr>
+<th>序号</th><th colspan='3'>测试项目</th>
+<th>技术指标</th><th>单位</th><th>测试结果</th><th>是否合格</th>
+</tr></thead><tbody>
+<tr>
+<td rowspan='2' class='center'>1</td>
+<td rowspan='2' class='center'>工作正常性检查</td>
+<td rowspan='2' class='center'>电源输出</td>
+<td class='center'>CH1 输出电压</td>
+<td class='center'>5.0±0.1</td>
+<td class='center'>V</td>
+<td class='num'>5</td>
+<td class='pass'>合格</td>
+</tr>
+<tr>
+<td class='center'>CH1 输出电流</td>
+<td class='center'>≤1.0</td>
+<td class='center'>A</td>
+<td class='num'></td>
+<td class='fail'>不合格</td>
+</tr>
+<tr>
+<td rowspan='2' class='center'>2</td>
+<td rowspan='2' class='center'>波形测量</td>
+<td rowspan='2' class='center'>CH2 波形</td>
+<td class='center'>峰峰值 Vpp</td>
+<td class='center'>5.0±0.5</td>
+<td class='center'>V</td>
+<td class='num'>5</td>
+<td class='pass'>合格</td>
+</tr>
+<tr>
+<td class='center'>频率</td>
+<td class='center'>5000±50</td>
+<td class='center'>Hz</td>
+<td class='num'>5000</td>
+<td class='pass'>合格</td>
+</tr>
+<tr>
+<td rowspan='1' class='center'>3</td>
+<td rowspan='1' class='center'>计算与判定</td>
+<td rowspan='1' class='center'>计算结果</td>
+<td class='center'>Vpp×2</td>
+<td class='center'>9~11</td>
+<td class='center'></td>
+<td class='num'>10</td>
+<td class='pass'>合格</td>
+</tr>
+</tbody></table>
+<p class='note'>说明：产品名称 / 测试地点 / 产品编号由用户填写（当前为演示占位值）；“是否合格”按技术指标自动判定（支持 ≤ / ≥ / ± / 区间 / 文本型指标）。</p>
+</body></html>
