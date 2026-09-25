@@ -13,6 +13,7 @@ from typing import Optional
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
 from ..bus.event_bus import bus
+from ..core.engine import ExecutionControl
 
 
 class TestController(QObject):
@@ -23,6 +24,8 @@ class TestController(QObject):
     flowChanged = Signal()
     reportChanged = Signal()
     instrumentsChanged = Signal()
+    flowStateChanged = Signal()
+    stepChanged = Signal(str)
 
     def __init__(
         self,
@@ -41,6 +44,9 @@ class TestController(QObject):
         self._last_command = ""
         self._instrument_defs = []
         self._visible = {}
+        self._control = ExecutionControl()
+        self._flow_running = False
+        self._current_step = ""
         self._scope_lock = threading.Lock()
         self._load_config()
 
@@ -67,6 +73,22 @@ class TestController(QObject):
     @Property(str, notify=flowChanged)
     def flowName(self) -> str:
         return (self._flow or {}).get("name", "")
+
+    @Property(bool, notify=flowStateChanged)
+    def flowRunning(self) -> bool:
+        return self._flow_running
+
+    @Property(bool, notify=flowStateChanged)
+    def flowPaused(self) -> bool:
+        return self._control.paused
+
+    @Property(bool, notify=flowStateChanged)
+    def stepMode(self) -> bool:
+        return self._control.step_mode
+
+    @Property(str, notify=stepChanged)
+    def currentStepId(self) -> str:
+        return self._current_step
 
     @Property(bool, constant=True)
     def usesSimulation(self) -> bool:
@@ -159,11 +181,24 @@ class TestController(QObject):
         from ..core.engine import ExecutionEngine
 
         info: dict = {}
+        self._flow_running = True
+        self._current_step = ""
+        self.flowStateChanged.emit()
         with bus.span("glue", "worker", "runFlow", detail=self._flow.get("flow_id", ""), info=info):
             try:
                 self._ensure_instruments_ready()
-                engine = ExecutionEngine(self._instruments)
+                engine = ExecutionEngine(self._instruments,
+                                         control=self._control,
+                                         defs=self._instrument_defs,
+                                         on_step=self._on_step)
                 result = engine.run_flow(self._flow)
+                if result.status == "stopped":
+                    power = getattr(self, "_power", None)
+                    if power is not None:
+                        try:
+                            power.syncState()
+                        except Exception:  # noqa: BLE001
+                            pass
 
                 for m in result.measurements:
                     if m.value is not None:
@@ -181,6 +216,11 @@ class TestController(QObject):
                 self._set_status("失败: %s" % exc)
                 info["result"] = str(exc)
                 info["status"] = "error"
+            finally:
+                self._flow_running = False
+                self._current_step = ""
+                self.flowStateChanged.emit()
+                self.stepChanged.emit("")
 
     # ---------- 仪器面板 -> 仪器命令下发 ----------
     def _instrument_def(self, iid: str):
@@ -347,31 +387,134 @@ class TestController(QObject):
 
     @Slot(result="QVariantList")
     def flowSteps(self):
-        """流程步骤（阶段2 只读展示；阶段4 支持编辑）。"""
-        rows = []
+        """流程顶层步骤摘要（阶段4：含 index/stepId，供列表与运行高亮）。"""
+        from ..core import flow_editor
 
-        def walk(items, prefix=""):
-            for idx, step in enumerate(items, 1):
-                seq = "%s%d" % (prefix, idx)
-                step_type = step.get("type", "")
-                if step_type == "measure":
-                    summary = "%s · %s" % (step.get("instrument", ""), step.get("method", ""))
-                elif step_type == "loop":
-                    summary = "循环 ×%s" % step.get("count", 1)
-                elif step_type == "branch":
-                    summary = "条件分支"
-                else:
-                    summary = str(step.get("params", ""))[:40]
-                rows.append({
-                    "seq": seq,
-                    "stepType": step_type,
-                    "summary": summary,
-                })
-                if step_type == "loop":
-                    walk(step.get("body", []), seq + ".")
+        if self._flow is None:
+            return []
+        return flow_editor.summarize(self._flow)
 
-        walk((self._flow or {}).get("steps", []))
+    # ---------- 流程运行控制（阶段4） ----------
+    def _on_step(self, step_id: str, step_type: str) -> None:
+        """引擎在步骤开始时回调（可能来自后台线程，Qt 会自动排队到界面线程）。"""
+        self._current_step = str(step_id)
+        self.stepChanged.emit(self._current_step)
+
+    @Slot()
+    def pauseFlow(self) -> None:
+        if not self._flow_running:
+            return
+        self._control.pause()
+        self._set_status("已请求暂停：当前步骤结束后停在边界（暂停期间不执行动作）")
+        self.flowStateChanged.emit()
+
+    @Slot()
+    def resumeFlow(self) -> None:
+        self._control.resume()
+        self._set_status("继续运行")
+        self.flowStateChanged.emit()
+
+    @Slot()
+    def stopFlow(self) -> None:
+        if not self._flow_running:
+            return
+        self._control.request_stop()
+        self._set_status("停止中：将回安全态（电源断电 / 示波器停止采集）")
+        self.flowStateChanged.emit()
+
+    @Slot()
+    def stepFlow(self) -> None:
+        """单步：未运行时以单步模式启动；运行中放行一步。"""
+        if not self._flow_running:
+            if self._flow is None:
+                self._set_status("请先加载流程")
+                return
+            self._control.enable_step(True)
+            self.flowStateChanged.emit()
+            self._set_status("单步运行（每步边界暂停）")
+            self.runFlow()
+        else:
+            self._control.step_continue()
+            self._set_status("单步：放行一步")
+
+    # ---------- 流程编辑（阶段4） ----------
+    @Slot(result="QVariantList")
+    def addableSteps(self):
+        from ..core import flow_editor
+
+        return flow_editor.addable_actions()
+
+    @Slot(int, result="QVariantList")
+    def stepParams(self, index: int):
+        from ..core import flow_editor
+
+        if self._flow is None:
+            return []
+        items = flow_editor.steps(self._flow)
+        if not (0 <= int(index) < len(items)):
+            return []
+        rows = flow_editor.step_params(items[int(index)])
+        for row in rows:
+            row["stepIndex"] = int(index)
         return rows
+
+    @Slot(str)
+    def addStep(self, action_id: str) -> None:
+        from ..core import flow_editor
+
+        action_id = str(action_id or "").strip()
+        if not action_id:
+            return
+        if self._flow is None:
+            self._flow = {"flow_id": "manual", "name": "手工流程", "steps": []}
+        flow_editor.add_step(self._flow, action_id)
+        bus.publish("ui", "action", "addStep", detail=action_id)
+        self.flowChanged.emit()
+
+    @Slot(int)
+    def removeStep(self, index: int) -> None:
+        from ..core import flow_editor
+
+        if self._flow is not None and flow_editor.remove_step(self._flow, int(index)):
+            bus.publish("ui", "action", "removeStep", detail="index=%d" % int(index))
+            self.flowChanged.emit()
+
+    @Slot(int, int)
+    def moveStep(self, index: int, delta: int) -> None:
+        from ..core import flow_editor
+
+        if self._flow is not None and flow_editor.move_step(self._flow, int(index), int(delta)):
+            bus.publish("ui", "action", "moveStep", detail="index=%d delta=%d" % (int(index), int(delta)))
+            self.flowChanged.emit()
+
+    @Slot(int, str, str)
+    def setStepParam(self, index: int, name: str, value: str) -> None:
+        from ..core import flow_editor
+
+        if self._flow is None:
+            return
+        if flow_editor.set_param(self._flow, int(index), str(name), value):
+            bus.publish("ui", "action", "setStepParam", detail="%s=%s" % (name, value))
+            self.flowChanged.emit()
+
+    @Slot(str, result=str)
+    def saveFlow(self, path: str) -> str:
+        import json
+        import os
+
+        from ..core.config import resolve_path
+
+        try:
+            target = resolve_path(path)
+            os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
+            with open(target, "w", encoding="utf-8") as fh:
+                json.dump(self._flow or {}, fh, ensure_ascii=False, indent=2)
+            self._set_status("流程已保存: %s" % target)
+            bus.publish("ui", "action", "saveFlow", detail=target)
+            return target
+        except Exception as exc:  # noqa: BLE001
+            self._set_status("保存流程失败: %s" % exc)
+            return ""
 
     @Slot(str)
     def manualAction(self, name: str) -> None:
@@ -412,6 +555,8 @@ class TestController(QObject):
                 self._set_status("保存报告失败: %s" % exc)
                 info["result"] = str(exc)
                 info["status"] = "error"
+
+
 
 
 

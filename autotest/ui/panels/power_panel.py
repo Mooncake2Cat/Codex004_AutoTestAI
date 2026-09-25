@@ -160,7 +160,25 @@ class PowerPanel(QObject):
         self.measurementsChanged.emit()
 
     @Slot()
+    def syncState(self) -> None:
+        """从仪器回读输出状态（流程"停止回安全态"后调用，保证界面与实际一致）。"""
+        if not callable(self._query):
+            return
+        changed = False
+        for ch in range(1, self._channels + 1):
+            resp = (self._query(":CHANnel%d:OUTPut?" % ch) or "").strip().upper()
+            if resp:
+                value = resp.startswith("ON")
+                if bool(self._set[ch]["output"]) != value:
+                    self._set[ch]["output"] = value
+                    changed = True
+        if changed:
+            self.stateChanged.emit()
+        self.refresh()
+
+    @Slot()
     def saveSafe(self) -> None:
         """安全动作：关闭输出（供"停止流程自动回安全态"使用）。"""
         if bool(self._state()["output"]):
             self.setOutput(False)
+

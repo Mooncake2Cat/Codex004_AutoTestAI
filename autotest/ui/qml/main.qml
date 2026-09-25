@@ -92,11 +92,28 @@ ApplicationWindow {
         }
     }
 
-    // 流程步骤（左区，只读展示）
+    // 可添加的步骤/动作（能力模型 + 内置步骤）
+    function refreshActions() {
+        addActionModel.clear()
+        var rows = controller.addableSteps()
+        for (var i = 0; i < rows.length; i++) addActionModel.append(rows[i])
+    }
+
+    // 所选步骤的参数（由能力模型自动生成）
+    function refreshStepParams() {
+        stepParamModel.clear()
+        if (flowStepList.currentIndex < 0) return
+        var rows = controller.stepParams(flowStepList.currentIndex)
+        for (var i = 0; i < rows.length; i++) stepParamModel.append(rows[i])
+    }
+
+    // 流程步骤（阶段4：可编辑 + 运行高亮）
     function refreshFlow() {
         flowStepModel.clear()
         var rows = controller.flowSteps()
         for (var i = 0; i < rows.length; i++) flowStepModel.append(rows[i])
+        if (flowStepModel.count > 0 && flowStepList.currentIndex < 0) flowStepList.currentIndex = 0
+        refreshStepParams()
     }
 
     // 报表总表（右区）
@@ -115,6 +132,7 @@ ApplicationWindow {
         scope.setPollChannel(root.selectedChannel)
         refreshFlow()
         refreshReport()
+        refreshActions()
         // 仪器坞：按注册表初始化各仪器可见性
         var list = controller.instruments()
         for (var i = 0; i < list.length; i++) {
@@ -250,10 +268,25 @@ ApplicationWindow {
 
                     RowLayout {
                         spacing: 6
-                        Button { text: qsTr("▶ 启动"); onClicked: { resultModel.clear(); controller.runFlow() } }
-                        Button { text: qsTr("⏸ 暂停"); onClicked: controller.manualAction("pause") }
-                        Button { text: qsTr("■ 停止"); onClicked: controller.manualAction("stop") }
-                        Button { text: qsTr("⏭ 单步"); onClicked: controller.manualAction("step") }
+                        Button {
+                            text: qsTr("▶ 启动")
+                            enabled: !controller.flowRunning && controller.flowLoaded
+                            onClicked: { resultModel.clear(); controller.runFlow() }
+                        }
+                        Button {
+                            text: controller.flowPaused ? qsTr("▶ 继续") : qsTr("⏸ 暂停")
+                            enabled: controller.flowRunning
+                            onClicked: controller.flowPaused ? controller.resumeFlow() : controller.pauseFlow()
+                        }
+                        Button {
+                            text: qsTr("■ 停止")
+                            enabled: controller.flowRunning
+                            onClicked: controller.stopFlow()
+                        }
+                        Button {
+                            text: qsTr("⏭ 单步")
+                            onClicked: controller.stepFlow()
+                        }
                         Item { Layout.fillWidth: true }
                     }
 
@@ -268,10 +301,70 @@ ApplicationWindow {
                             color: "#57606a"; font.pixelSize: 10
                             Layout.fillWidth: true; elide: Text.ElideRight
                         }
+                        Label {
+                            text: controller.flowRunning
+                                  ? (controller.flowPaused ? qsTr("已暂停") : (controller.stepMode ? qsTr("单步") : qsTr("运行中")))
+                                  : qsTr("编辑态")
+                            color: controller.flowRunning ? "#bc4c00" : "#1a7f37"
+                            font.pixelSize: 10
+                        }
                     }
-                    Label {
-                        text: qsTr("阶段2：只读展示；阶段4 支持增删改与运行高亮")
-                        color: "#8b98a5"; font.pixelSize: 10
+
+                    RowLayout {
+                        spacing: 4
+                        ComboBox {
+                            id: addActionCombo
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 24
+                            font.pixelSize: 11
+                            textRole: "label"
+                            model: addActionModel
+                        }
+                        Button {
+                            text: qsTr("添加")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            enabled: !controller.flowRunning && addActionModel.count > 0
+                            onClicked: {
+                                var item = addActionModel.get(addActionCombo.currentIndex)
+                                if (item) controller.addStep(item.action || item.stepType)
+                                root.refreshFlow()
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        spacing: 4
+                        Button {
+                            text: qsTr("删除")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            enabled: !controller.flowRunning && flowStepList.currentIndex >= 0
+                            onClicked: { controller.removeStep(flowStepList.currentIndex); root.refreshFlow() }
+                        }
+                        Button {
+                            text: qsTr("上移")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            enabled: !controller.flowRunning && flowStepList.currentIndex > 0
+                            onClicked: { controller.moveStep(flowStepList.currentIndex, -1); root.refreshFlow() }
+                        }
+                        Button {
+                            text: qsTr("下移")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            enabled: !controller.flowRunning && flowStepList.currentIndex >= 0
+                                     && flowStepList.currentIndex < flowStepModel.count - 1
+                            onClicked: { controller.moveStep(flowStepList.currentIndex, 1); root.refreshFlow() }
+                        }
+                        Item { Layout.fillWidth: true }
+                        Button {
+                            text: qsTr("保存流程")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            enabled: !controller.flowRunning && controller.flowLoaded
+                            onClicked: controller.saveFlow("config/flows/flow_current.json")
+                        }
                     }
 
                     ListView {
@@ -281,20 +374,91 @@ ApplicationWindow {
                         model: flowStepModel
                         clip: true
                         spacing: 2
+                        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                        onCurrentIndexChanged: root.refreshStepParams()
                         delegate: Rectangle {
-                            width: flowStepList.width
+                            width: flowStepList.width - 10
                             height: 26
-                            color: "#ffffff"
-                            border.color: "#d0d7de"
+                            property bool isCurrent: controller.currentStepId.length > 0 && model.stepId === controller.currentStepId
+                            color: isCurrent ? "#fff8e5" : (flowStepList.currentIndex === index ? "#eef4ff" : "#ffffff")
+                            border.color: isCurrent ? "#d4a72c" : (flowStepList.currentIndex === index ? "#0969da" : "#d0d7de")
                             radius: 3
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: flowStepList.currentIndex = index
+                            }
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 6
                                 anchors.rightMargin: 6
                                 spacing: 6
-                                Label { text: model.seq; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 24 }
-                                Label { text: model.stepType; color: "#0969da"; font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 64 }
+                                Label { text: model.seq; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 20 }
+                                Label { text: model.stepType; color: "#0969da"; font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 58 }
                                 Label { text: model.summary; color: "#24292f"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Label { text: qsTr("步骤参数"); font.bold: true; color: "#24292f" }
+                        Label {
+                            text: controller.flowRunning ? qsTr("（运行中只读）") : qsTr("（由能力模型生成）")
+                            color: "#8b98a5"; font.pixelSize: 10
+                        }
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        columnSpacing: 6
+                        rowSpacing: 3
+                        Repeater {
+                            model: stepParamModel
+                            Label {
+                                text: model.label
+                                color: "#57606a"
+                                font.pixelSize: 11
+                                horizontalAlignment: Text.AlignRight
+                            }
+                            ComboBox {
+                                visible: model.options !== undefined && model.options.length > 0
+                                enabled: !controller.flowRunning
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 24
+                                font.pixelSize: 11
+                                model: model.options
+                                currentIndex: model.options ? model.options.indexOf(String(model.value)) : -1
+                                onActivated: {
+                                    controller.setStepParam(model.stepIndex, model.name, model.options[index])
+                                    root.refreshStepParams()
+                                }
+                            }
+                            SpinBox {
+                                visible: (model.options === undefined || model.options.length === 0) && model.type === "int"
+                                enabled: !controller.flowRunning
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 24
+                                font.pixelSize: 11
+                                from: model.min === null || model.min === undefined ? -999999 : model.min
+                                to: model.max === null || model.max === undefined ? 999999 : model.max
+                                value: Number(model.value === null || model.value === undefined ? 0 : model.value)
+                                onValueModified: {
+                                    controller.setStepParam(model.stepIndex, model.name, String(value))
+                                    root.refreshStepParams()
+                                }
+                            }
+                            TextField {
+                                visible: (model.options === undefined || model.options.length === 0) && model.type !== "int"
+                                enabled: !controller.flowRunning
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 24
+                                font.pixelSize: 11
+                                text: model.value === null || model.value === undefined ? "" : String(model.value)
+                                onEditingFinished: {
+                                    controller.setStepParam(model.stepIndex, model.name, text)
+                                    root.refreshStepParams()
+                                }
                             }
                         }
                     }
@@ -1154,6 +1318,8 @@ ApplicationWindow {
 
     ListModel { id: resultModel }
     ListModel { id: flowStepModel }
+    ListModel { id: addActionModel }
+    ListModel { id: stepParamModel }
     ListModel { id: reportModel }
 
     Connections {

@@ -50,6 +50,7 @@ class TestResult:
     dut_info: Dict[str, Any] = field(default_factory=dict)
     test_conditions: Dict[str, Any] = field(default_factory=dict)
     measurements: List[Measurement] = field(default_factory=list)
+    verdicts: List[Dict[str, Any]] = field(default_factory=list)   # 限值判定结果（阶段4）
     status: str = "unknown"
     message: str = ""
     started_at: str = field(default_factory=_now)
@@ -69,6 +70,7 @@ class TestResult:
             test_id=data.get("test_id", ""),
             dut_info=data.get("dut_info", {}),
             test_conditions=data.get("test_conditions", {}),
+            verdicts=list(data.get("verdicts", []) or []),
             status=data.get("status", "unknown"),
             message=data.get("message", ""),
             started_at=data.get("started_at", _now()),
@@ -78,4 +80,5 @@ class TestResult:
             Measurement.from_dict(m) for m in data.get("measurements", [])
         ]
         return result
+
 
