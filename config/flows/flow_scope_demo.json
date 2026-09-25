@@ -1,0 +1,64 @@
+﻿{
+  "flow_id": "dho924s-smoke",
+  "name": "DHO924S 示波器自动测量示例（CH2 接信号）",
+  "dut_info": {
+    "dut": "CH2 接入信号",
+    "sn": "DHO9S275006837",
+    "note": "被测件占位；本流程以 CH2 为被测信号通道"
+  },
+  "test_conditions": {
+    "temperature_c": 25,
+    "operator": "prototype"
+  },
+  "steps": [
+    {
+      "id": "s1",
+      "type": "measure",
+      "instrument": "scope",
+      "method": "identify",
+      "params": { "name": "instrument_id" }
+    },
+    {
+      "id": "s2",
+      "type": "loop",
+      "count": 3,
+      "body": [
+        {
+          "id": "s2.1",
+          "type": "measure",
+          "instrument": "scope",
+          "method": "measure_item",
+          "params": { "item": "vpp", "channel": 2, "name": "ch2_vpp" }
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "measure",
+      "instrument": "scope",
+      "method": "measure_item",
+      "params": { "item": "frequency", "channel": 2, "name": "ch2_freq" }
+    },
+    {
+      "id": "s4",
+      "type": "measure",
+      "instrument": "scope",
+      "method": "measure_item",
+      "params": { "item": "vrms", "channel": 2, "name": "ch2_vrms" }
+    },
+    {
+      "id": "s5",
+      "type": "measure",
+      "instrument": "scope",
+      "method": "measure_item",
+      "params": { "item": "rtime", "channel": 2, "name": "ch2_rtime" }
+    },
+    {
+      "id": "s6",
+      "type": "measure",
+      "instrument": "scope",
+      "method": "measure_item",
+      "params": { "item": "frequency", "channel": 1, "name": "ch1_freq" }
+    }
+  ]
+}
