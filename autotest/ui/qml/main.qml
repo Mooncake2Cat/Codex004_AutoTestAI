@@ -337,15 +337,15 @@ ApplicationWindow {
                     anchors.margins: 8
                     spacing: 6
 
-                    Label { text: qsTr("流程控制"); font.bold: true; color: "#DCEBFF" }
+                    Label { text: qsTr("流程控制"); font.bold: true; color: "#E8BD6A" }
 
                     GridLayout {
                         columns: 4
                         columnSpacing: 6
                         rowSpacing: 4
-                        Label { text: qsTr("产品"); color: "#8FB3D9"; font.pixelSize: 11 }
+                        Label { text: qsTr("产品"); color: "#B9D4F0"; font.pixelSize: 11 }
                         TextField { id: dutModel; Layout.fillWidth: true; text: "演示被测件"; placeholderText: qsTr("型号") }
-                        Label { text: qsTr("序列号"); color: "#8FB3D9"; font.pixelSize: 11 }
+                        Label { text: qsTr("序列号"); color: "#B9D4F0"; font.pixelSize: 11 }
                         TextField { id: dutSn; Layout.fillWidth: true; text: "DEMO-001"; placeholderText: "SN" }
                     }
 
@@ -398,12 +398,12 @@ ApplicationWindow {
                     Rectangle { Layout.fillWidth: true; height: 1; color: "#1E3A5F" }
 
                     RowLayout {
-                        Label { text: qsTr("流程编辑"); font.bold: true; color: "#DCEBFF" }
+                        Label { text: qsTr("流程编辑"); font.bold: true; color: "#E8BD6A" }
                         Label {
                             text: controller.flowLoaded
                                   ? qsTr("（") + controller.flowName + qsTr("）")
                                   : qsTr("（未加载流程）")
-                            color: "#8FB3D9"; font.pixelSize: 10
+                            color: "#B9D4F0"; font.pixelSize: 10
                             Layout.fillWidth: true; elide: Text.ElideRight
                         }
                         Label {
@@ -497,7 +497,7 @@ ApplicationWindow {
                                 anchors.leftMargin: 6
                                 anchors.rightMargin: 6
                                 spacing: 6
-                                Label { text: model.seq; color: "#8FB3D9"; font.pixelSize: 11; Layout.preferredWidth: 20 }
+                                Label { text: model.seq; color: "#B9D4F0"; font.pixelSize: 11; Layout.preferredWidth: 20 }
                                 Label { text: model.stepType; color: "#38BDF8"; font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 58 }
                                 Label { text: model.summary; color: "#DCEBFF"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
                             }
@@ -505,10 +505,10 @@ ApplicationWindow {
                     }
 
                     RowLayout {
-                        Label { text: qsTr("步骤参数"); font.bold: true; color: "#DCEBFF" }
+                        Label { text: qsTr("步骤参数"); font.bold: true; color: "#E8BD6A" }
                         Label {
                             text: controller.flowRunning ? qsTr("（运行中只读）") : qsTr("（由能力模型生成）")
-                            color: "#5F7FA8"; font.pixelSize: 10
+                            color: "#8FB3D9"; font.pixelSize: 10
                         }
                         Item { Layout.fillWidth: true }
                     }
@@ -522,7 +522,7 @@ ApplicationWindow {
                             model: stepParamModel
                             Label {
                                 text: model.label
-                                color: "#8FB3D9"
+                                color: "#B9D4F0"
                                 font.pixelSize: 11
                                 horizontalAlignment: Text.AlignRight
                             }
@@ -569,13 +569,13 @@ ApplicationWindow {
                     }
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: "#1E3A5F" }
-                    Label { text: qsTr("最近命令"); font.bold: true; color: "#DCEBFF" }
+                    Label { text: qsTr("最近命令"); font.bold: true; color: "#E8BD6A" }
                     Label {
                         Layout.fillWidth: true
                         text: controller.lastCommandText.length > 0 ? controller.lastCommandText : "—"
                         font.family: "Consolas, monospace"
                         font.pixelSize: 10
-                        color: "#8FB3D9"
+                        color: "#B9D4F0"
                         wrapMode: Text.Wrap
                         maximumLineCount: 3
                         elide: Text.ElideRight
@@ -594,7 +594,7 @@ ApplicationWindow {
                     spacing: 6
 
                     RowLayout {
-                        Label { text: qsTr("仪器坞"); font.bold: true; color: "#DCEBFF" }
+                        Label { text: qsTr("仪器坞"); font.bold: true; color: "#E8BD6A" }
                         CheckBox {
                             text: qsTr("示波器 DHO924S")
                             checked: root.scopeVisible
@@ -607,7 +607,7 @@ ApplicationWindow {
                         }
                         Label {
                             text: controller.instrumentSummary
-                            color: "#5F7FA8"
+                            color: "#8FB3D9"
                             font.pixelSize: 9
                             elide: Text.ElideRight
                             Layout.maximumWidth: 300
@@ -615,7 +615,7 @@ ApplicationWindow {
                         Item { Layout.fillWidth: true }
                         Label {
                             text: qsTr("上下分栏可拖拽；仪器数 >4 时自动改为 2×2 / 标签页")
-                            color: "#5F7FA8"; font.pixelSize: 10
+                            color: "#8FB3D9"; font.pixelSize: 10
                         }
                     }
 
@@ -641,10 +641,10 @@ ApplicationWindow {
                                 spacing: 4
 
                                 RowLayout {
-                                    Label { text: qsTr("示波器 · Rigol DHO924S"); color: "#EAF4FF"; font.bold: true }
+                                    Label { text: qsTr("示波器 · Rigol DHO924S"); color: "#E8BD6A"; font.bold: true }
                                     Label {
                                         text: scope.simulationMode ? qsTr("（仿真）") : qsTr("（真机）")
-                                        color: "#5F7FA8"; font.pixelSize: 10
+                                        color: "#8FB3D9"; font.pixelSize: 10
                                     }
                                     TechButton {
                                         text: qsTr("参数")
@@ -660,7 +660,7 @@ ApplicationWindow {
                                         horizontalAlignment: Text.AlignRight
                                         elide: Text.ElideRight
                                         text: scope.commandText.length > 0 ? scope.commandText : "—"
-                                        color: "#5F7FA8"; font.pixelSize: 9
+                                        color: "#8FB3D9"; font.pixelSize: 9
                                         font.family: "Consolas, monospace"
                                     }
                                 }
@@ -839,7 +839,7 @@ ApplicationWindow {
                     width: readoutScroll.availableWidth
                     spacing: 6
 
-                    Label { text: qsTr("自动测量"); color: "#EAF4FF"; font.bold: true }
+                    Label { text: qsTr("自动测量"); color: "#E8BD6A"; font.bold: true }
 
                     Repeater {
                         model: 4
@@ -866,7 +866,7 @@ ApplicationWindow {
                                           + scope.channelCoupling(index + 1) + "  "
                                           + scope.channelProbe(index + 1) + "x  "
                                           + scope.channelOffset(index + 1).toFixed(2) + "V"
-                                    color: "#5F7FA8"
+                                    color: "#8FB3D9"
                                     font.pixelSize: 10
                                 }
                                 Label {
@@ -882,7 +882,7 @@ ApplicationWindow {
                     Label {
                         Layout.fillWidth: true
                         text: qsTr("提示：本屏不显示波形（真机波形下载未接入）；\n右侧读数为真机轮询值，面板命令直接下发真机。")
-                        color: "#5F7FA8"
+                        color: "#8FB3D9"
                         font.pixelSize: 10
                         wrapMode: Text.Wrap
                     }
@@ -895,7 +895,12 @@ ApplicationWindow {
         TabBar {
             id: ctrlTabs
             Layout.fillWidth: true
-            Layout.preferredHeight: 30
+            Layout.preferredHeight: 34
+            background: Rectangle {
+                color: "#071526"
+                border.color: "#244B70"
+                radius: 4
+            }
             visible: root.showScopeSettings
             TechTabButton { text: qsTr("垂直") }
             TechTabButton { text: qsTr("水平") }
@@ -933,7 +938,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("通道"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("通道"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 3
@@ -952,7 +957,7 @@ ApplicationWindow {
                                 }
                             }
                         }
-                        Label { text: qsTr("显示"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("显示"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Switch {
                             id: chEnableSwitch
                             padding: 0
@@ -969,7 +974,7 @@ ApplicationWindow {
                             text: qsTr("反相")
                             onClicked: scope.setChannelInvert(root.selectedChannel, checked)
                         }
-                        Label { text: qsTr("带宽"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("带宽"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Switch {
                             id: chBwSwitch
                             padding: 0
@@ -979,7 +984,7 @@ ApplicationWindow {
                             onClicked: scope.setChannelBwLimit(root.selectedChannel, checked)
                         }
 
-                        Label { text: qsTr("档位"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("档位"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             id: vdivCombo
                             padding: 2
@@ -988,7 +993,7 @@ ApplicationWindow {
                             model: root.vDivLabels
                             onActivated: scope.setChannelScale(root.selectedChannel, root.vDivValues[index])
                         }
-                        Label { text: qsTr("耦合"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("耦合"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             id: couplingCombo
                             padding: 2
@@ -997,7 +1002,7 @@ ApplicationWindow {
                             model: root.couplingValues
                             onActivated: scope.setChannelCoupling(root.selectedChannel, root.couplingValues[index])
                         }
-                        Label { text: qsTr("探头"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("探头"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             id: probeCombo
                             padding: 2
@@ -1006,7 +1011,7 @@ ApplicationWindow {
                             model: ["1x", "10x", "100x"]
                             onActivated: scope.setChannelProbe(root.selectedChannel, [1, 10, 100][index])
                         }
-                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         SpinBox {
                             id: offsetSpin
                             padding: 2
@@ -1027,7 +1032,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 92
@@ -1036,7 +1041,7 @@ ApplicationWindow {
                             currentIndex: root.indexOfValue(root.timeValues, scope.timeScale())
                             onActivated: scope.setTimeScale(root.timeValues[index])
                         }
-                        Label { text: qsTr("位置(µs)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("位置(µs)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 92
@@ -1048,7 +1053,7 @@ ApplicationWindow {
                             value: Math.round(scope.timeOffset() * 1000000)
                             onValueModified: scope.setTimeOffset(value / 1000000.0)
                         }
-                        Label { text: qsTr("满屏"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("满屏"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Label { text: (scope.timeScale() * 10 * 1000).toFixed(3) + " ms"; color: "#DCEBFF" }
                     }
 
@@ -1058,7 +1063,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("模式"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("模式"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 88
@@ -1067,7 +1072,7 @@ ApplicationWindow {
                             currentIndex: root.sweepValues.indexOf(scope.triggerSweep())
                             onActivated: scope.setTriggerSweep(root.sweepValues[index])
                         }
-                        Label { text: qsTr("源"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("源"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 72
@@ -1076,7 +1081,7 @@ ApplicationWindow {
                             currentIndex: scope.triggerSource() - 1
                             onActivated: scope.setTriggerSource(index + 1)
                         }
-                        Label { text: qsTr("斜率"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("斜率"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 88
@@ -1086,7 +1091,7 @@ ApplicationWindow {
                             onActivated: scope.setTriggerSlope(root.slopeValues[index])
                         }
 
-                        Label { text: qsTr("电平(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("电平(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 96
@@ -1114,7 +1119,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("采集"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("采集"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 4
@@ -1122,7 +1127,7 @@ ApplicationWindow {
                             TechButton { padding: 2; Layout.preferredHeight: 22; text: "STOP"; highlighted: !scope.running; onClicked: scope.setRunning(false) }
                             TechButton { padding: 2; Layout.preferredHeight: 22; text: "SINGLE"; onClicked: scope.singleShot() }
                         }
-                        Label { text: qsTr("设置"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("设置"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 4
@@ -1130,13 +1135,13 @@ ApplicationWindow {
                             TechButton { padding: 2; Layout.preferredHeight: 22; text: qsTr("清除显示"); onClicked: scope.clearScope() }
                         }
 
-                        Label { text: qsTr("状态"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("状态"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Label {
                             Layout.columnSpan: 3
                             text: scope.running ? qsTr("运行中 (RUN)") : qsTr("已停止 (STOP)")
                             color: scope.running ? "#34D399" : "#8FB3D9"
                         }
-                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Label {
                             Layout.columnSpan: 3
                             text: scope.timebaseText
@@ -1150,7 +1155,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("测量项"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("测量项"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         RowLayout {
                             Layout.columnSpan: 4
                             spacing: 3
@@ -1172,7 +1177,7 @@ ApplicationWindow {
                             onClicked: scope.measureReset()
                         }
 
-                        Label { text: qsTr("统计"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("统计"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Switch {
                             padding: 0
                             spacing: 4
@@ -1190,7 +1195,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("波形"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("波形"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 84
@@ -1199,7 +1204,7 @@ ApplicationWindow {
                             currentIndex: root.afgValues.indexOf(scope.afgFunction())
                             onActivated: scope.setAfgFunction(root.afgValues[index])
                         }
-                        Label { text: qsTr("频率(Hz)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("频率(Hz)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 104
@@ -1211,7 +1216,7 @@ ApplicationWindow {
                             value: Math.round(scope.afgFrequency())
                             onValueModified: scope.setAfgFrequency(value)
                         }
-                        Label { text: qsTr("幅度(mVpp)"); Layout.preferredWidth: 66; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("幅度(mVpp)"); Layout.preferredWidth: 66; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 96
@@ -1223,7 +1228,7 @@ ApplicationWindow {
                             value: Math.round(scope.afgAmplitude() * 1000)
                             onValueModified: scope.setAfgAmplitude(value / 1000.0)
                         }
-                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 96
@@ -1236,7 +1241,7 @@ ApplicationWindow {
                             onValueModified: scope.setAfgOffset(value / 1000.0)
                         }
 
-                        Label { text: qsTr("输出"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: qsTr("输出"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#B9D4F0" }
                         Switch {
                             padding: 0
                             spacing: 4
@@ -1271,15 +1276,15 @@ ApplicationWindow {
                                     spacing: 6
 
                                     RowLayout {
-                                        Label { text: qsTr("直流电源 · Siglent SPD3303X-E"); color: "#EAF4FF"; font.bold: true }
-                                        Label { text: qsTr("（虚拟仪器）"); color: "#5F7FA8"; font.pixelSize: 10 }
+                                        Label { text: qsTr("直流电源 · Siglent SPD3303X-E"); color: "#E8BD6A"; font.bold: true }
+                                        Label { text: qsTr("（虚拟仪器）"); color: "#8FB3D9"; font.pixelSize: 10 }
                                         Item { Layout.fillWidth: true }
                                         Label {
                                             Layout.preferredWidth: 300
                                             horizontalAlignment: Text.AlignRight
                                             elide: Text.ElideRight
                                             text: power.commandText.length > 0 ? power.commandText : "—"
-                                            color: "#5F7FA8"; font.pixelSize: 9
+                                            color: "#8FB3D9"; font.pixelSize: 9
                                             font.family: "Consolas, monospace"
                                         }
                                     }
@@ -1334,7 +1339,7 @@ ApplicationWindow {
                                     Label {
                                         Layout.fillWidth: true
                                         text: qsTr("说明：阶段3 为虚拟电源（SCPI 已按鼎阳 SPD 系列常见写法实现，待真机核对）；加电/断电按钮随后接入。")
-                                        color: "#5F7FA8"; font.pixelSize: 10; wrapMode: Text.Wrap
+                                        color: "#8FB3D9"; font.pixelSize: 10; wrapMode: Text.Wrap
                                     }
                                 }
                             }
@@ -1355,11 +1360,11 @@ ApplicationWindow {
                     anchors.margins: 8
                     spacing: 6
 
-                    Label { text: qsTr("测试报表（验收记录）"); font.bold: true; color: "#DCEBFF" }
+                    Label { text: qsTr("测试报表（验收记录）"); font.bold: true; color: "#E8BD6A" }
                     Label {
                         Layout.fillWidth: true
                         text: root.reportSummaryText
-                        color: "#8FB3D9"
+                        color: "#B9D4F0"
                         font.pixelSize: 10
                         wrapMode: Text.Wrap
                     }
@@ -1386,7 +1391,7 @@ ApplicationWindow {
                                     spacing: 4
                                     Label {
                                         text: model.group + (model.sub ? " · " + model.sub : "")
-                                        color: "#8FB3D9"; font.pixelSize: 10
+                                        color: "#B9D4F0"; font.pixelSize: 10
                                         Layout.fillWidth: true; elide: Text.ElideRight
                                     }
                                     Label {
@@ -1400,7 +1405,7 @@ ApplicationWindow {
                                     Label { text: model.detail; color: "#DCEBFF"; font.pixelSize: 11; font.bold: true }
                                     Label {
                                         text: model.spec + (model.unit ? " " + model.unit : "")
-                                        color: "#5F7FA8"; font.pixelSize: 10
+                                        color: "#8FB3D9"; font.pixelSize: 10
                                     }
                                     Item { Layout.fillWidth: true }
                                     Label {
@@ -1465,7 +1470,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 8
                 spacing: 4
-                Label { text: qsTr("流程执行结果"); font.bold: true; color: "#DCEBFF" }
+                Label { text: qsTr("流程执行结果"); font.bold: true; color: "#E8BD6A" }
                 ListView {
                     id: resultList
                     Layout.fillWidth: true
@@ -1539,7 +1544,7 @@ ApplicationWindow {
             Label {
                 id: tcpTestResult
                 text: ""
-                color: "#8FB3D9"
+                color: "#B9D4F0"
                 font.pixelSize: 10
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
@@ -1562,7 +1567,7 @@ ApplicationWindow {
             Label {
                 id: discoveryStatus
                 text: qsTr("手动触发，避免自动扫描公司网络")
-                color: "#5F7FA8"
+                color: "#8FB3D9"
                 font.pixelSize: 10
             }
 
@@ -1586,10 +1591,10 @@ ApplicationWindow {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 1
-                            Label { text: model.title; font.bold: true; color: "#DCEBFF" }
+                            Label { text: model.title; font.bold: true; color: "#E8BD6A" }
                             Label {
                                 text: model.idn
-                                color: "#8FB3D9"
+                                color: "#B9D4F0"
                                 font.pixelSize: 10
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
