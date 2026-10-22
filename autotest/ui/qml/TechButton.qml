@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-// 深蓝科技风按钮：渐变底、青蓝描边、悬停/按下/选中高亮
+// 深蓝科技风按钮：琥珀/亮橙渐变，与深蓝背景形成强对比
 Button {
     id: control
     implicitHeight: 28
@@ -13,8 +13,7 @@ Button {
     contentItem: Text {
         text: control.text
         font: control.font
-        color: !control.enabled ? "#4B6584"
-             : (control.checked || control.highlighted ? "#EAF7FF" : "#DCEBFF")
+        color: !control.enabled ? "#7A6A4A" : "#1A1206"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -23,18 +22,21 @@ Button {
     background: Rectangle {
         radius: 4
         border.width: 1
-        border.color: !control.enabled ? "#1B3350"
-                    : (control.down || control.hovered || control.checked || control.highlighted
-                       ? "#38BDF8" : "#2A5A8A")
+        border.color: !control.enabled ? "#3A2E1A"
+                    : (control.down ? "#FFE08A"
+                    : (control.hovered || control.checked || control.highlighted ? "#FFE08A" : "#F59E0B"))
         gradient: Gradient {
             GradientStop {
                 position: 0.0
-                color: !control.enabled ? "#0A1628"
-                     : (control.down ? "#07182E"
-                     : (control.checked || control.highlighted ? "#144A78"
-                     : (control.hovered ? "#123A63" : "#0E2747")))
+                color: !control.enabled ? "#2E2415"
+                     : (control.down ? "#B45309"
+                     : (control.hovered || control.checked || control.highlighted ? "#FBBF24" : "#F59E0B"))
             }
-            GradientStop { position: 1.0; color: "#081A30" }
+            GradientStop {
+                position: 1.0
+                color: !control.enabled ? "#1F1A10"
+                     : (control.down ? "#92400E" : "#D97706")
+            }
         }
         Rectangle {
             anchors.left: parent.left
@@ -42,8 +44,8 @@ Button {
             anchors.top: parent.top
             height: 1
             radius: 1
-            color: control.enabled ? "#38BDF8" : "#1B3350"
-            opacity: (control.hovered || control.checked || control.highlighted) ? 0.55 : 0.18
+            color: "#FFE08A"
+            opacity: control.enabled ? (control.hovered || control.checked || control.highlighted ? 0.75 : 0.35) : 0.1
         }
     }
 }

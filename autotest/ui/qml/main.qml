@@ -417,7 +417,7 @@ ApplicationWindow {
 
                     RowLayout {
                         spacing: 4
-                        ComboBox {
+                        TechComboBox {
                             id: addActionCombo
                             Layout.fillWidth: true
                             Layout.preferredHeight: 24
@@ -526,7 +526,7 @@ ApplicationWindow {
                                 font.pixelSize: 11
                                 horizontalAlignment: Text.AlignRight
                             }
-                            ComboBox {
+                            TechComboBox {
                                 visible: model.options !== undefined && model.options.length > 0
                                 enabled: !controller.flowRunning
                                 Layout.fillWidth: true
@@ -980,7 +980,7 @@ ApplicationWindow {
                         }
 
                         Label { text: qsTr("档位"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             id: vdivCombo
                             padding: 2
                             Layout.preferredWidth: 88
@@ -989,7 +989,7 @@ ApplicationWindow {
                             onActivated: scope.setChannelScale(root.selectedChannel, root.vDivValues[index])
                         }
                         Label { text: qsTr("耦合"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             id: couplingCombo
                             padding: 2
                             Layout.preferredWidth: 70
@@ -998,7 +998,7 @@ ApplicationWindow {
                             onActivated: scope.setChannelCoupling(root.selectedChannel, root.couplingValues[index])
                         }
                         Label { text: qsTr("探头"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             id: probeCombo
                             padding: 2
                             Layout.preferredWidth: 70
@@ -1028,7 +1028,7 @@ ApplicationWindow {
                         rowSpacing: 4
 
                         Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 92
                             Layout.preferredHeight: 22
@@ -1059,7 +1059,7 @@ ApplicationWindow {
                         rowSpacing: 4
 
                         Label { text: qsTr("模式"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 88
                             Layout.preferredHeight: 22
@@ -1068,7 +1068,7 @@ ApplicationWindow {
                             onActivated: scope.setTriggerSweep(root.sweepValues[index])
                         }
                         Label { text: qsTr("源"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 72
                             Layout.preferredHeight: 22
@@ -1077,7 +1077,7 @@ ApplicationWindow {
                             onActivated: scope.setTriggerSource(index + 1)
                         }
                         Label { text: qsTr("斜率"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 88
                             Layout.preferredHeight: 22
@@ -1191,7 +1191,7 @@ ApplicationWindow {
                         rowSpacing: 4
 
                         Label { text: qsTr("波形"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
-                        ComboBox {
+                        TechComboBox {
                             padding: 2
                             Layout.preferredWidth: 84
                             Layout.preferredHeight: 22
@@ -1287,7 +1287,7 @@ ApplicationWindow {
                                     RowLayout {
                                         spacing: 10
                                         Label { text: qsTr("通道") }
-                                        ComboBox {
+                                        TechComboBox {
                                             Layout.preferredWidth: 80
                                             model: ["CH1", "CH2", "CH3"]
                                             currentIndex: power.channel - 1
