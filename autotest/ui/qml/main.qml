@@ -5,6 +5,8 @@ import QtQuick.Layouts
 
 ApplicationWindow {
     id: root
+    font.family: "Microsoft YaHei UI"
+    font.pixelSize: 12
     // 默认约为屏幕面积的 1/2，居中；每次启动按默认几何（不记忆位置）
     property var archWindow: null
     // 仪器坞：各仪器格子可见性（阶段3 为固定两格；更多仪器时按 2×2/标签页扩展）
@@ -53,13 +55,13 @@ ApplicationWindow {
 
     // 分层配色（表示/胶合/应用/HAL/数据/报告）
     function layerColor(layer) {
-        if (layer === "ui") return "#58a6ff";
-        if (layer === "glue") return "#39c5cf";
-        if (layer === "app") return "#3fb950";
-        if (layer === "hal") return "#f0883e";
-        if (layer === "data") return "#bc8cff";
-        if (layer === "report") return "#8b949e";
-        return "#8b98a5";
+        if (layer === "ui") return "#38BDF8";
+        if (layer === "glue") return "#22D3EE";
+        if (layer === "app") return "#34D399";
+        if (layer === "hal") return "#FB923C";
+        if (layer === "data") return "#A78BFA";
+        if (layer === "report") return "#64748B";
+        return "#5F7FA8";
     }
 
     function indexOfValue(arr, v) {
@@ -207,7 +209,10 @@ ApplicationWindow {
     // ================= 顶部标题栏 =================
     header: Rectangle {
         height: 52
-        color: "#1f2933"
+        gradient: Gradient {
+        GradientStop { position: 0.0; color: "#0A1C36" }
+        GradientStop { position: 1.0; color: "#04101F" }
+        }
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 16
@@ -215,21 +220,21 @@ ApplicationWindow {
             spacing: 12
             Label {
                 text: qsTr("通用自动化测试软件平台 · 原型验证")
-                color: "#e6edf3"
+                color: "#EAF4FF"
                 font.pixelSize: 16
                 font.bold: true
             }
             Item { Layout.fillWidth: true }
             Label {
                 text: qsTr("仪器: ") + controller.instrumentInfo
-                color: "#9fb3c8"
+                color: "#7FA6CC"
                 font.pixelSize: 12
             }
             Rectangle {
                 width: 80
                 height: 22
                 radius: 11
-                color: "#6e7681"
+                color: "#3F5F82"
                 Label {
                     anchors.centerIn: parent
                     text: scope.sourceLabel
@@ -241,7 +246,44 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        z: 0
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#050B1A" }
+            GradientStop { position: 0.5; color: "#071A33" }
+            GradientStop { position: 1.0; color: "#030814" }
+        }
+    }
+    Canvas {
+        anchors.fill: parent
+        z: 0
+        opacity: 0.28
+        onPaint: {
+            var ctx = getContext("2d");
+            var w = width;
+            var h = height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = "#0E3A66";
+            ctx.lineWidth = 1;
+            for (var x = 0; x < w; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (var y = 0; y < h; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+        }
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+    }
     ColumnLayout {
+        z: 1
         anchors.fill: parent
         anchors.margins: 10
         spacing: 8
@@ -252,7 +294,7 @@ ApplicationWindow {
             Button { text: qsTr("加载示例流程"); onClicked: controller.loadFlow("config/flow_sample.json") }
             Button { text: qsTr("运行流程"); onClicked: { resultModel.clear(); controller.runFlow() } }
             Button { text: qsTr("保存报告"); onClicked: controller.saveReport("reports/report.html") }
-            Rectangle { width: 1; height: 24; color: "#d0d7de" }
+            Rectangle { width: 1; height: 24; color: "#1E3A5F" }
             Button {
                 text: scope.running ? qsTr("⏸ STOP") : qsTr("▶ RUN")
                 onClicked: scope.setRunning(!scope.running)
@@ -272,7 +314,7 @@ ApplicationWindow {
             Label {
                 text: qsTr("状态：") + controller.status
                 font.bold: true
-                color: controller.status.indexOf("完成") === 0 ? "#1a7f37" : "#24292f"
+                color: controller.status.indexOf("完成") === 0 ? "#34D399" : "#DCEBFF"
             }
         }
 
@@ -286,8 +328,8 @@ ApplicationWindow {
             // ---------- 左区：流程控制 + 流程编辑 ----------
             Rectangle {
                 SplitView.preferredWidth: 350
-                color: "#f6f8fa"
-                border.color: "#d0d7de"
+                color: "#0B1830"
+                border.color: "#1E3A5F"
                 radius: 4
 
                 ColumnLayout {
@@ -295,15 +337,15 @@ ApplicationWindow {
                     anchors.margins: 8
                     spacing: 6
 
-                    Label { text: qsTr("流程控制"); font.bold: true; color: "#24292f" }
+                    Label { text: qsTr("流程控制"); font.bold: true; color: "#DCEBFF" }
 
                     GridLayout {
                         columns: 4
                         columnSpacing: 6
                         rowSpacing: 4
-                        Label { text: qsTr("产品"); color: "#57606a"; font.pixelSize: 11 }
+                        Label { text: qsTr("产品"); color: "#8FB3D9"; font.pixelSize: 11 }
                         TextField { id: dutModel; Layout.fillWidth: true; text: "演示被测件"; placeholderText: qsTr("型号") }
-                        Label { text: qsTr("序列号"); color: "#57606a"; font.pixelSize: 11 }
+                        Label { text: qsTr("序列号"); color: "#8FB3D9"; font.pixelSize: 11 }
                         TextField { id: dutSn; Layout.fillWidth: true; text: "DEMO-001"; placeholderText: "SN" }
                     }
 
@@ -353,22 +395,22 @@ ApplicationWindow {
                         Item { Layout.fillWidth: true }
                     }
 
-                    Rectangle { Layout.fillWidth: true; height: 1; color: "#d0d7de" }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: "#1E3A5F" }
 
                     RowLayout {
-                        Label { text: qsTr("流程编辑"); font.bold: true; color: "#24292f" }
+                        Label { text: qsTr("流程编辑"); font.bold: true; color: "#DCEBFF" }
                         Label {
                             text: controller.flowLoaded
                                   ? qsTr("（") + controller.flowName + qsTr("）")
                                   : qsTr("（未加载流程）")
-                            color: "#57606a"; font.pixelSize: 10
+                            color: "#8FB3D9"; font.pixelSize: 10
                             Layout.fillWidth: true; elide: Text.ElideRight
                         }
                         Label {
                             text: controller.flowRunning
                                   ? (controller.flowPaused ? qsTr("已暂停") : (controller.stepMode ? qsTr("单步") : qsTr("运行中")))
                                   : qsTr("编辑态")
-                            color: controller.flowRunning ? "#bc4c00" : "#1a7f37"
+                            color: controller.flowRunning ? "#F59E0B" : "#34D399"
                             font.pixelSize: 10
                         }
                     }
@@ -443,8 +485,8 @@ ApplicationWindow {
                             width: flowStepList.width - 10
                             height: 26
                             property bool isCurrent: controller.currentStepId.length > 0 && model.stepId === controller.currentStepId
-                            color: isCurrent ? "#fff8e5" : (flowStepList.currentIndex === index ? "#eef4ff" : "#ffffff")
-                            border.color: isCurrent ? "#d4a72c" : (flowStepList.currentIndex === index ? "#0969da" : "#d0d7de")
+                            color: isCurrent ? "#2A2410" : (flowStepList.currentIndex === index ? "#12345A" : "#0F1E3A")
+                            border.color: isCurrent ? "#FBBF24" : (flowStepList.currentIndex === index ? "#38BDF8" : "#1E3A5F")
                             radius: 3
                             MouseArea {
                                 anchors.fill: parent
@@ -455,18 +497,18 @@ ApplicationWindow {
                                 anchors.leftMargin: 6
                                 anchors.rightMargin: 6
                                 spacing: 6
-                                Label { text: model.seq; color: "#57606a"; font.pixelSize: 11; Layout.preferredWidth: 20 }
-                                Label { text: model.stepType; color: "#0969da"; font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 58 }
-                                Label { text: model.summary; color: "#24292f"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                                Label { text: model.seq; color: "#8FB3D9"; font.pixelSize: 11; Layout.preferredWidth: 20 }
+                                Label { text: model.stepType; color: "#38BDF8"; font.pixelSize: 11; font.bold: true; Layout.preferredWidth: 58 }
+                                Label { text: model.summary; color: "#DCEBFF"; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
                             }
                         }
                     }
 
                     RowLayout {
-                        Label { text: qsTr("步骤参数"); font.bold: true; color: "#24292f" }
+                        Label { text: qsTr("步骤参数"); font.bold: true; color: "#DCEBFF" }
                         Label {
                             text: controller.flowRunning ? qsTr("（运行中只读）") : qsTr("（由能力模型生成）")
-                            color: "#8b98a5"; font.pixelSize: 10
+                            color: "#5F7FA8"; font.pixelSize: 10
                         }
                         Item { Layout.fillWidth: true }
                     }
@@ -480,7 +522,7 @@ ApplicationWindow {
                             model: stepParamModel
                             Label {
                                 text: model.label
-                                color: "#57606a"
+                                color: "#8FB3D9"
                                 font.pixelSize: 11
                                 horizontalAlignment: Text.AlignRight
                             }
@@ -526,14 +568,14 @@ ApplicationWindow {
                         }
                     }
 
-                    Rectangle { Layout.fillWidth: true; height: 1; color: "#d0d7de" }
-                    Label { text: qsTr("最近命令"); font.bold: true; color: "#24292f" }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: "#1E3A5F" }
+                    Label { text: qsTr("最近命令"); font.bold: true; color: "#DCEBFF" }
                     Label {
                         Layout.fillWidth: true
                         text: controller.lastCommandText.length > 0 ? controller.lastCommandText : "—"
                         font.family: "Consolas, monospace"
                         font.pixelSize: 10
-                        color: "#57606a"
+                        color: "#8FB3D9"
                         wrapMode: Text.Wrap
                         maximumLineCount: 3
                         elide: Text.ElideRight
@@ -552,7 +594,7 @@ ApplicationWindow {
                     spacing: 6
 
                     RowLayout {
-                        Label { text: qsTr("仪器坞"); font.bold: true; color: "#24292f" }
+                        Label { text: qsTr("仪器坞"); font.bold: true; color: "#DCEBFF" }
                         CheckBox {
                             text: qsTr("示波器 DHO924S")
                             checked: root.scopeVisible
@@ -565,7 +607,7 @@ ApplicationWindow {
                         }
                         Label {
                             text: controller.instrumentSummary
-                            color: "#8b98a5"
+                            color: "#5F7FA8"
                             font.pixelSize: 9
                             elide: Text.ElideRight
                             Layout.maximumWidth: 300
@@ -573,7 +615,7 @@ ApplicationWindow {
                         Item { Layout.fillWidth: true }
                         Label {
                             text: qsTr("上下分栏可拖拽；仪器数 >4 时自动改为 2×2 / 标签页")
-                            color: "#8b98a5"; font.pixelSize: 10
+                            color: "#5F7FA8"; font.pixelSize: 10
                         }
                     }
 
@@ -589,8 +631,8 @@ ApplicationWindow {
                             SplitView.minimumHeight: 300
                             visible: root.scopeVisible
                             clip: true
-                            color: "#0d1117"
-                            border.color: "#30363d"
+                            color: "#050D1C"
+                            border.color: "#183A5F"
                             radius: 4
 
                             ColumnLayout {
@@ -599,10 +641,10 @@ ApplicationWindow {
                                 spacing: 4
 
                                 RowLayout {
-                                    Label { text: qsTr("示波器 · Rigol DHO924S"); color: "#e6edf3"; font.bold: true }
+                                    Label { text: qsTr("示波器 · Rigol DHO924S"); color: "#EAF4FF"; font.bold: true }
                                     Label {
                                         text: scope.simulationMode ? qsTr("（仿真）") : qsTr("（真机）")
-                                        color: "#8b98a5"; font.pixelSize: 10
+                                        color: "#5F7FA8"; font.pixelSize: 10
                                     }
                                     Button {
                                         text: qsTr("参数")
@@ -618,7 +660,7 @@ ApplicationWindow {
                                         horizontalAlignment: Text.AlignRight
                                         elide: Text.ElideRight
                                         text: scope.commandText.length > 0 ? scope.commandText : "—"
-                                        color: "#8b98a5"; font.pixelSize: 9
+                                        color: "#5F7FA8"; font.pixelSize: 9
                                         font.family: "Consolas, monospace"
                                     }
                                 }
@@ -633,8 +675,8 @@ ApplicationWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: "#0a0f14"
-                border.color: "#30363d"
+                color: "#030814"
+                border.color: "#183A5F"
                 radius: 4
                 clip: true
 
@@ -646,12 +688,12 @@ ApplicationWindow {
                         var divX = w / 10;
                         var divY = h / 8;
                         ctx.lineWidth = 1;
-                        ctx.strokeStyle = "#2a3942";
+                        ctx.strokeStyle = "#12304F";
                         ctx.beginPath();
                         for (var i = 1; i < 10; i++) { var x = i * divX; ctx.moveTo(x, 0); ctx.lineTo(x, h); }
                         for (var j = 1; j < 8; j++) { var y = j * divY; ctx.moveTo(0, y); ctx.lineTo(w, y); }
                         ctx.stroke();
-                        ctx.strokeStyle = "#5a707c";
+                        ctx.strokeStyle = "#1E5A8A";
                         ctx.beginPath();
                         ctx.moveTo(5 * divX, 0); ctx.lineTo(5 * divX, h);
                         ctx.moveTo(0, 4 * divY); ctx.lineTo(w, 4 * divY);
@@ -687,13 +729,13 @@ ApplicationWindow {
                         var divY = h / 8;
                         var y = h / 2 - (scope.triggerLevel() / scale) * divY;
                         if (y < 0 || y > h) return;
-                        ctx.strokeStyle = "#f0883e";
+                        ctx.strokeStyle = "#FB923C";
                         ctx.setLineDash([4, 4]);
                         ctx.beginPath();
                         ctx.moveTo(0, y); ctx.lineTo(w, y);
                         ctx.stroke();
                         ctx.setLineDash([]);
-                        ctx.fillStyle = "#f0883e";
+                        ctx.fillStyle = "#FB923C";
                         ctx.font = "11px sans-serif";
                         ctx.fillText("T " + scope.triggerLevel().toFixed(2) + "V", 8, y - 4);
                     }
@@ -709,9 +751,9 @@ ApplicationWindow {
                             ty += 16;
                         }
                         ctx.textAlign = "right";
-                        ctx.fillStyle = scope.running ? "#3fb950" : "#f85149";
+                        ctx.fillStyle = scope.running ? "#34D399" : "#FB7185";
                         ctx.fillText(scope.running ? "RUN" : "STOP", w - 10, 16);
-                        ctx.fillStyle = "#8b98a5";
+                        ctx.fillStyle = "#5F7FA8";
                         ctx.fillText("T: " + scope.timebaseText, w - 10, 32);
                         ctx.textAlign = "left";
                     }
@@ -721,7 +763,7 @@ ApplicationWindow {
                         var w = width;
                         var h = height;
                         ctx.clearRect(0, 0, w, h);
-                        ctx.fillStyle = "#0a0f14";
+                        ctx.fillStyle = "#030814";
                         ctx.fillRect(0, 0, w, h);
                         paintGrid(ctx, w, h);
                         var drawn = false;
@@ -734,7 +776,7 @@ ApplicationWindow {
                         if (!drawn) {
                             ctx.save();
                             ctx.font = "15px 'Microsoft YaHei', sans-serif";
-                            ctx.fillStyle = "#7d8590";
+                            ctx.fillStyle = "#5F7FA8";
                             ctx.textAlign = "center";
                             ctx.fillText(scope.waveformOn
                                          ? (scope.simulationMode
@@ -752,6 +794,21 @@ ApplicationWindow {
                     onHeightChanged: requestPaint()
                 }
 
+                Rectangle {
+                    id: scanLine
+                    width: parent.width
+                    height: 1
+                    z: 2
+                    color: "#38BDF8"
+                    opacity: 0.22
+                    NumberAnimation on y {
+                        from: 0
+                        to: scopeCanvas.height
+                        duration: 5000
+                        loops: Animation.Infinite
+                        running: true
+                    }
+                }
                 Connections {
                     target: scope
                     function onMeasurementsChanged() { }
@@ -766,8 +823,8 @@ ApplicationWindow {
             Rectangle {
                 Layout.preferredWidth: 236
                 Layout.fillHeight: true
-                color: "#161b22"
-                border.color: "#30363d"
+                color: "#081326"
+                border.color: "#183A5F"
                 radius: 4
 
                 ScrollView {
@@ -782,7 +839,7 @@ ApplicationWindow {
                     width: readoutScroll.availableWidth
                     spacing: 6
 
-                    Label { text: qsTr("自动测量"); color: "#e6edf3"; font.bold: true }
+                    Label { text: qsTr("自动测量"); color: "#EAF4FF"; font.bold: true }
 
                     Repeater {
                         model: 4
@@ -791,8 +848,8 @@ ApplicationWindow {
                             Layout.preferredHeight: 128
                             visible: scope.channelEnabled(index + 1)
                             radius: 4
-                            color: "#1c2128"
-                            border.color: "#30363d"
+                            color: "#0D1B33"
+                            border.color: "#183A5F"
                             ColumnLayout {
                                 anchors.fill: parent
                                 anchors.margins: 8
@@ -801,7 +858,7 @@ ApplicationWindow {
                                     spacing: 6
                                     Rectangle { width: 10; height: 10; radius: 5; color: scope.channelColor(index + 1) }
                                     Label { text: "CH" + (index + 1); color: "white"; font.bold: true }
-                                    Label { text: (scope.stateSeq >= 0 ? "" : "") + scope.channelText(index + 1); color: "#9fb3c8"; font.pixelSize: 11 }
+                                    Label { text: (scope.stateSeq >= 0 ? "" : "") + scope.channelText(index + 1); color: "#7FA6CC"; font.pixelSize: 11 }
                                     Item { Layout.fillWidth: true }
                                 }
                                 Label {
@@ -809,12 +866,12 @@ ApplicationWindow {
                                           + scope.channelCoupling(index + 1) + "  "
                                           + scope.channelProbe(index + 1) + "x  "
                                           + scope.channelOffset(index + 1).toFixed(2) + "V"
-                                    color: "#8b98a5"
+                                    color: "#5F7FA8"
                                     font.pixelSize: 10
                                 }
                                 Label {
                                     text: scope.measureSeq >= 0 ? scope.measurementText(index + 1) : ""
-                                    color: "#d7e2ea"
+                                    color: "#C7E0FF"
                                     font.pixelSize: 11
                                     font.family: "Consolas, monospace"
                                 }
@@ -825,7 +882,7 @@ ApplicationWindow {
                     Label {
                         Layout.fillWidth: true
                         text: qsTr("提示：本屏不显示波形（真机波形下载未接入）；\n右侧读数为真机轮询值，面板命令直接下发真机。")
-                        color: "#8b98a5"
+                        color: "#5F7FA8"
                         font.pixelSize: 10
                         wrapMode: Text.Wrap
                     }
@@ -854,8 +911,8 @@ ApplicationWindow {
             Layout.minimumHeight: 60
             visible: root.showScopeSettings
             clip: true
-            color: "#f6f8fa"
-            border.color: "#d0d7de"
+            color: "#0B1830"
+            border.color: "#1E3A5F"
             radius: 4
 
             // Pane：紧凑字体容器（子控件继承 11px 字号）
@@ -876,7 +933,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("通道"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("通道"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 3
@@ -895,7 +952,7 @@ ApplicationWindow {
                                 }
                             }
                         }
-                        Label { text: qsTr("显示"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("显示"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         Switch {
                             id: chEnableSwitch
                             padding: 0
@@ -912,7 +969,7 @@ ApplicationWindow {
                             text: qsTr("反相")
                             onClicked: scope.setChannelInvert(root.selectedChannel, checked)
                         }
-                        Label { text: qsTr("带宽"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("带宽"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         Switch {
                             id: chBwSwitch
                             padding: 0
@@ -922,7 +979,7 @@ ApplicationWindow {
                             onClicked: scope.setChannelBwLimit(root.selectedChannel, checked)
                         }
 
-                        Label { text: qsTr("档位"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("档位"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             id: vdivCombo
                             padding: 2
@@ -931,7 +988,7 @@ ApplicationWindow {
                             model: root.vDivLabels
                             onActivated: scope.setChannelScale(root.selectedChannel, root.vDivValues[index])
                         }
-                        Label { text: qsTr("耦合"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("耦合"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             id: couplingCombo
                             padding: 2
@@ -940,7 +997,7 @@ ApplicationWindow {
                             model: root.couplingValues
                             onActivated: scope.setChannelCoupling(root.selectedChannel, root.couplingValues[index])
                         }
-                        Label { text: qsTr("探头"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("探头"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             id: probeCombo
                             padding: 2
@@ -949,7 +1006,7 @@ ApplicationWindow {
                             model: ["1x", "10x", "100x"]
                             onActivated: scope.setChannelProbe(root.selectedChannel, [1, 10, 100][index])
                         }
-                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         SpinBox {
                             id: offsetSpin
                             padding: 2
@@ -970,7 +1027,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             padding: 2
                             Layout.preferredWidth: 92
@@ -979,7 +1036,7 @@ ApplicationWindow {
                             currentIndex: root.indexOfValue(root.timeValues, scope.timeScale())
                             onActivated: scope.setTimeScale(root.timeValues[index])
                         }
-                        Label { text: qsTr("位置(µs)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("位置(µs)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 92
@@ -991,8 +1048,8 @@ ApplicationWindow {
                             value: Math.round(scope.timeOffset() * 1000000)
                             onValueModified: scope.setTimeOffset(value / 1000000.0)
                         }
-                        Label { text: qsTr("满屏"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
-                        Label { text: (scope.timeScale() * 10 * 1000).toFixed(3) + " ms"; color: "#24292f" }
+                        Label { text: qsTr("满屏"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
+                        Label { text: (scope.timeScale() * 10 * 1000).toFixed(3) + " ms"; color: "#DCEBFF" }
                     }
 
                     // ---------- 触发 ----------
@@ -1001,7 +1058,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("模式"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("模式"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             padding: 2
                             Layout.preferredWidth: 88
@@ -1010,7 +1067,7 @@ ApplicationWindow {
                             currentIndex: root.sweepValues.indexOf(scope.triggerSweep())
                             onActivated: scope.setTriggerSweep(root.sweepValues[index])
                         }
-                        Label { text: qsTr("源"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("源"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             padding: 2
                             Layout.preferredWidth: 72
@@ -1019,7 +1076,7 @@ ApplicationWindow {
                             currentIndex: scope.triggerSource() - 1
                             onActivated: scope.setTriggerSource(index + 1)
                         }
-                        Label { text: qsTr("斜率"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("斜率"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             padding: 2
                             Layout.preferredWidth: 88
@@ -1029,7 +1086,7 @@ ApplicationWindow {
                             onActivated: scope.setTriggerSlope(root.slopeValues[index])
                         }
 
-                        Label { text: qsTr("电平(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("电平(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 96
@@ -1057,7 +1114,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("采集"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("采集"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 4
@@ -1065,7 +1122,7 @@ ApplicationWindow {
                             Button { padding: 2; Layout.preferredHeight: 22; text: "STOP"; highlighted: !scope.running; onClicked: scope.setRunning(false) }
                             Button { padding: 2; Layout.preferredHeight: 22; text: "SINGLE"; onClicked: scope.singleShot() }
                         }
-                        Label { text: qsTr("设置"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("设置"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 4
@@ -1073,17 +1130,17 @@ ApplicationWindow {
                             Button { padding: 2; Layout.preferredHeight: 22; text: qsTr("清除显示"); onClicked: scope.clearScope() }
                         }
 
-                        Label { text: qsTr("状态"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("状态"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         Label {
                             Layout.columnSpan: 3
                             text: scope.running ? qsTr("运行中 (RUN)") : qsTr("已停止 (STOP)")
-                            color: scope.running ? "#1a7f37" : "#57606a"
+                            color: scope.running ? "#34D399" : "#8FB3D9"
                         }
-                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("时基"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         Label {
                             Layout.columnSpan: 3
                             text: scope.timebaseText
-                            color: "#24292f"
+                            color: "#DCEBFF"
                         }
                     }
 
@@ -1093,7 +1150,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("测量项"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("测量项"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         RowLayout {
                             Layout.columnSpan: 4
                             spacing: 3
@@ -1115,7 +1172,7 @@ ApplicationWindow {
                             onClicked: scope.measureReset()
                         }
 
-                        Label { text: qsTr("统计"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("统计"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         Switch {
                             padding: 0
                             spacing: 4
@@ -1133,7 +1190,7 @@ ApplicationWindow {
                         columnSpacing: 8
                         rowSpacing: 4
 
-                        Label { text: qsTr("波形"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("波形"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         ComboBox {
                             padding: 2
                             Layout.preferredWidth: 84
@@ -1142,7 +1199,7 @@ ApplicationWindow {
                             currentIndex: root.afgValues.indexOf(scope.afgFunction())
                             onActivated: scope.setAfgFunction(root.afgValues[index])
                         }
-                        Label { text: qsTr("频率(Hz)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("频率(Hz)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 104
@@ -1154,7 +1211,7 @@ ApplicationWindow {
                             value: Math.round(scope.afgFrequency())
                             onValueModified: scope.setAfgFrequency(value)
                         }
-                        Label { text: qsTr("幅度(mVpp)"); Layout.preferredWidth: 66; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("幅度(mVpp)"); Layout.preferredWidth: 66; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 96
@@ -1166,7 +1223,7 @@ ApplicationWindow {
                             value: Math.round(scope.afgAmplitude() * 1000)
                             onValueModified: scope.setAfgAmplitude(value / 1000.0)
                         }
-                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("偏移(mV)"); Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         SpinBox {
                             padding: 2
                             Layout.preferredWidth: 96
@@ -1179,7 +1236,7 @@ ApplicationWindow {
                             onValueModified: scope.setAfgOffset(value / 1000.0)
                         }
 
-                        Label { text: qsTr("输出"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#57606a" }
+                        Label { text: qsTr("输出"); Layout.preferredWidth: 42; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         Switch {
                             padding: 0
                             spacing: 4
@@ -1204,8 +1261,8 @@ ApplicationWindow {
                                 SplitView.minimumHeight: 140
                                 visible: root.powerVisible
                                 clip: true
-                                color: "#0d1117"
-                                border.color: "#30363d"
+                                color: "#050D1C"
+                                border.color: "#183A5F"
                                 radius: 4
 
                                 ColumnLayout {
@@ -1214,15 +1271,15 @@ ApplicationWindow {
                                     spacing: 6
 
                                     RowLayout {
-                                        Label { text: qsTr("直流电源 · Siglent SPD3303X-E"); color: "#e6edf3"; font.bold: true }
-                                        Label { text: qsTr("（虚拟仪器）"); color: "#8b98a5"; font.pixelSize: 10 }
+                                        Label { text: qsTr("直流电源 · Siglent SPD3303X-E"); color: "#EAF4FF"; font.bold: true }
+                                        Label { text: qsTr("（虚拟仪器）"); color: "#5F7FA8"; font.pixelSize: 10 }
                                         Item { Layout.fillWidth: true }
                                         Label {
                                             Layout.preferredWidth: 300
                                             horizontalAlignment: Text.AlignRight
                                             elide: Text.ElideRight
                                             text: power.commandText.length > 0 ? power.commandText : "—"
-                                            color: "#8b98a5"; font.pixelSize: 9
+                                            color: "#5F7FA8"; font.pixelSize: 9
                                             font.family: "Consolas, monospace"
                                         }
                                     }
@@ -1260,15 +1317,15 @@ ApplicationWindow {
                                         spacing: 16
                                         Label {
                                             text: qsTr("实测电压：") + power.measuredVoltage.toFixed(3) + " V"
-                                            color: "#d7e2ea"; font.family: "Consolas, monospace"
+                                            color: "#C7E0FF"; font.family: "Consolas, monospace"
                                         }
                                         Label {
                                             text: qsTr("实测电流：") + power.measuredCurrent.toFixed(4) + " A"
-                                            color: "#d7e2ea"; font.family: "Consolas, monospace"
+                                            color: "#C7E0FF"; font.family: "Consolas, monospace"
                                         }
                                         Label {
                                             text: power.outputOn ? qsTr("输出：ON") : qsTr("输出：OFF")
-                                            color: power.outputOn ? "#3fb950" : "#8b98a5"
+                                            color: power.outputOn ? "#34D399" : "#5F7FA8"
                                         }
                                         Item { Layout.fillWidth: true }
                                         Button { text: qsTr("读取一次"); onClicked: power.refresh() }
@@ -1277,7 +1334,7 @@ ApplicationWindow {
                                     Label {
                                         Layout.fillWidth: true
                                         text: qsTr("说明：阶段3 为虚拟电源（SCPI 已按鼎阳 SPD 系列常见写法实现，待真机核对）；加电/断电按钮随后接入。")
-                                        color: "#8b98a5"; font.pixelSize: 10; wrapMode: Text.Wrap
+                                        color: "#5F7FA8"; font.pixelSize: 10; wrapMode: Text.Wrap
                                     }
                                 }
                             }
@@ -1289,8 +1346,8 @@ ApplicationWindow {
             // ---------- 右区：测试报表（总表） ----------
             Rectangle {
                 SplitView.preferredWidth: 320
-                color: "#f6f8fa"
-                border.color: "#d0d7de"
+                color: "#0B1830"
+                border.color: "#1E3A5F"
                 radius: 4
 
                 ColumnLayout {
@@ -1298,11 +1355,11 @@ ApplicationWindow {
                     anchors.margins: 8
                     spacing: 6
 
-                    Label { text: qsTr("测试报表（验收记录）"); font.bold: true; color: "#24292f" }
+                    Label { text: qsTr("测试报表（验收记录）"); font.bold: true; color: "#DCEBFF" }
                     Label {
                         Layout.fillWidth: true
                         text: root.reportSummaryText
-                        color: "#57606a"
+                        color: "#8FB3D9"
                         font.pixelSize: 10
                         wrapMode: Text.Wrap
                     }
@@ -1318,8 +1375,8 @@ ApplicationWindow {
                         delegate: Rectangle {
                             width: reportList.width - 8
                             height: 42
-                            color: model.passed ? "#f2fbf4" : "#fff5f5"
-                            border.color: model.passed ? "#b7e0c0" : "#f0b8b8"
+                            color: model.passed ? "#0E2A1B" : "#2A1215"
+                            border.color: model.passed ? "#1F6F4A" : "#7A2A33"
                             radius: 3
                             ColumnLayout {
                                 anchors.fill: parent
@@ -1329,26 +1386,26 @@ ApplicationWindow {
                                     spacing: 4
                                     Label {
                                         text: model.group + (model.sub ? " · " + model.sub : "")
-                                        color: "#57606a"; font.pixelSize: 10
+                                        color: "#8FB3D9"; font.pixelSize: 10
                                         Layout.fillWidth: true; elide: Text.ElideRight
                                     }
                                     Label {
                                         text: model.verdict
-                                        color: model.passed ? "#1a7f37" : "#cf222e"
+                                        color: model.passed ? "#34D399" : "#FB7185"
                                         font.pixelSize: 10; font.bold: true
                                     }
                                 }
                                 RowLayout {
                                     spacing: 6
-                                    Label { text: model.detail; color: "#24292f"; font.pixelSize: 11; font.bold: true }
+                                    Label { text: model.detail; color: "#DCEBFF"; font.pixelSize: 11; font.bold: true }
                                     Label {
                                         text: model.spec + (model.unit ? " " + model.unit : "")
-                                        color: "#8b98a5"; font.pixelSize: 10
+                                        color: "#5F7FA8"; font.pixelSize: 10
                                     }
                                     Item { Layout.fillWidth: true }
                                     Label {
                                         text: model.value + (model.unit ? " " + model.unit : "")
-                                        color: "#24292f"; font.pixelSize: 11
+                                        color: "#DCEBFF"; font.pixelSize: 11
                                         font.family: "Consolas, monospace"
                                     }
                                 }
@@ -1380,8 +1437,8 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 26
-            color: "#eef2f6"
-            border.color: "#d0d7de"
+            color: "#0C1B33"
+            border.color: "#1E3A5F"
             radius: 3
             Label {
                 anchors.fill: parent
@@ -1392,7 +1449,7 @@ ApplicationWindow {
                 text: qsTr("最近命令：") + (controller.lastCommandText.length > 0 ? controller.lastCommandText : "—")
                 font.family: "Consolas, monospace"
                 font.pixelSize: 11
-                color: "#24292f"
+                color: "#DCEBFF"
             }
         }
 
@@ -1400,15 +1457,15 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 108
-            color: "#f6f8fa"
-            border.color: "#d0d7de"
+            color: "#0B1830"
+            border.color: "#1E3A5F"
             radius: 4
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 8
                 spacing: 4
-                Label { text: qsTr("流程执行结果"); font.bold: true; color: "#24292f" }
+                Label { text: qsTr("流程执行结果"); font.bold: true; color: "#DCEBFF" }
                 ListView {
                     id: resultList
                     Layout.fillWidth: true
@@ -1421,7 +1478,7 @@ ApplicationWindow {
                         padding: 2
                         font.pixelSize: 11
                         font.family: "Consolas, monospace"
-                        color: "#24292f"
+                        color: "#DCEBFF"
                         wrapMode: Text.Wrap
                     }
                 }
@@ -1482,13 +1539,13 @@ ApplicationWindow {
             Label {
                 id: tcpTestResult
                 text: ""
-                color: "#57606a"
+                color: "#8FB3D9"
                 font.pixelSize: 10
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#d0d7de" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#1E3A5F" }
 
             RowLayout {
                 Label { text: qsTr("网络扫描 / VISA"); font.bold: true }
@@ -1505,7 +1562,7 @@ ApplicationWindow {
             Label {
                 id: discoveryStatus
                 text: qsTr("手动触发，避免自动扫描公司网络")
-                color: "#8b98a5"
+                color: "#5F7FA8"
                 font.pixelSize: 10
             }
 
@@ -1520,8 +1577,8 @@ ApplicationWindow {
                 delegate: Rectangle {
                     width: discoveryList.width - 8
                     height: 52
-                    color: "#f6f8fa"
-                    border.color: "#d0d7de"
+                    color: "#0B1830"
+                    border.color: "#1E3A5F"
                     radius: 3
                     RowLayout {
                         anchors.fill: parent
@@ -1529,10 +1586,10 @@ ApplicationWindow {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 1
-                            Label { text: model.title; font.bold: true; color: "#24292f" }
+                            Label { text: model.title; font.bold: true; color: "#DCEBFF" }
                             Label {
                                 text: model.idn
-                                color: "#57606a"
+                                color: "#8FB3D9"
                                 font.pixelSize: 10
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true

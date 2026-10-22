@@ -6,11 +6,13 @@ import QtQuick.Window
 // 窗口2：架构台（只读展示六层实现与层间关系；事件来自真实事件总线）
 ApplicationWindow {
     id: arch
+    font.family: "Microsoft YaHei UI"
+    font.pixelSize: 12
     objectName: "architectureWindow"
     title: qsTr("架构台 - 分层实现与数据流转（只读）")
     visibility: Window.Maximized
     visible: true
-    color: "#f6f8fa"
+    color: "#0B1830"
 
     signal clearRequested()
 
@@ -19,13 +21,13 @@ ApplicationWindow {
 
     // 分层配色（与操作台一致）
     function layerColor(layer) {
-        if (layer === "ui") return "#58a6ff";
-        if (layer === "glue") return "#39c5cf";
-        if (layer === "app") return "#3fb950";
-        if (layer === "hal") return "#f0883e";
-        if (layer === "data") return "#bc8cff";
-        if (layer === "report") return "#8b949e";
-        return "#57606a";
+        if (layer === "ui") return "#38BDF8";
+        if (layer === "glue") return "#22D3EE";
+        if (layer === "app") return "#34D399";
+        if (layer === "hal") return "#FB923C";
+        if (layer === "data") return "#A78BFA";
+        if (layer === "report") return "#64748B";
+        return "#8FB3D9";
     }
 
     // 层定义（实现内容与层间关系）
@@ -77,7 +79,10 @@ ApplicationWindow {
 
     header: Rectangle {
         height: 52
-        color: "#1f2933"
+        gradient: Gradient {
+        GradientStop { position: 0.0; color: "#0A1C36" }
+        GradientStop { position: 1.0; color: "#04101F" }
+        }
 
         RowLayout {
             anchors.fill: parent
@@ -87,20 +92,20 @@ ApplicationWindow {
 
             Label {
                 text: qsTr("架构台 · 分层实现与数据流转")
-                color: "#e6edf3"
+                color: "#EAF4FF"
                 font.pixelSize: 16
                 font.bold: true
             }
             Label {
                 text: qsTr("（只读展示；事件来自真实执行）")
-                color: "#9fb3c8"
+                color: "#7FA6CC"
                 font.pixelSize: 11
             }
             Item { Layout.fillWidth: true }
             Label {
                 id: statsLabel
                 text: qsTr("等待事件…")
-                color: "#9fb3c8"
+                color: "#7FA6CC"
                 font.pixelSize: 11
             }
             CheckBox {
@@ -115,7 +120,44 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        anchors.fill: parent
+        z: 0
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#050B1A" }
+            GradientStop { position: 0.5; color: "#071A33" }
+            GradientStop { position: 1.0; color: "#030814" }
+        }
+    }
+    Canvas {
+        anchors.fill: parent
+        z: 0
+        opacity: 0.28
+        onPaint: {
+            var ctx = getContext("2d");
+            var w = width;
+            var h = height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = "#0E3A66";
+            ctx.lineWidth = 1;
+            for (var x = 0; x < w; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (var y = 0; y < h; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+        }
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+    }
     ColumnLayout {
+        z: 1
         anchors.fill: parent
         anchors.margins: 10
         spacing: 8
@@ -124,8 +166,8 @@ ApplicationWindow {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 34
-            color: "#eef2f6"
-            border.color: "#d0d7de"
+            color: "#0C1B33"
+            border.color: "#1E3A5F"
             radius: 4
             Label {
                 anchors.fill: parent
@@ -133,7 +175,7 @@ ApplicationWindow {
                 anchors.rightMargin: 10
                 verticalAlignment: Text.AlignVCenter
                 text: qsTr("数据/调用流向：  表示层  →  胶合层  →  应用与算法层  →  硬件抽象层  →  （测量结果）数据层  →  报告层        服务器通信层：本阶段范围外")
-                color: "#24292f"
+                color: "#DCEBFF"
                 font.pixelSize: 12
                 elide: Text.ElideRight
             }
@@ -156,7 +198,7 @@ ApplicationWindow {
                     property int layerCount: 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#0d1117"
+                    color: "#050D1C"
                     border.color: arch.layerColor(model.layer)
                     border.width: model.state === "范围外" ? 1 : 2
                     radius: 4
@@ -202,12 +244,12 @@ ApplicationWindow {
                             Item { Layout.fillWidth: true }
                             Label {
                                 text: model.state
-                                color: model.state === "范围外" ? "#8b98a5" : "#3fb950"
+                                color: model.state === "范围外" ? "#5F7FA8" : "#34D399"
                                 font.pixelSize: 10
                             }
                             Label {
                                 text: qsTr("事件 ") + card.layerCount
-                                color: "#8b98a5"
+                                color: "#5F7FA8"
                                 font.pixelSize: 10
                             }
                         }
@@ -215,7 +257,7 @@ ApplicationWindow {
                         Label {
                             Layout.fillWidth: true
                             text: model.files
-                            color: "#8b98a5"
+                            color: "#5F7FA8"
                             font.pixelSize: 10
                             elide: Text.ElideRight
                         }
@@ -223,12 +265,12 @@ ApplicationWindow {
                         Label {
                             Layout.fillWidth: true
                             text: model.rel
-                            color: "#c9d1d9"
+                            color: "#C7E0FF"
                             font.pixelSize: 10
                             wrapMode: Text.Wrap
                         }
 
-                        Rectangle { Layout.fillWidth: true; height: 1; color: "#21262d" }
+                        Rectangle { Layout.fillWidth: true; height: 1; color: "#0A2540" }
 
                         ListView {
                             id: cardList
@@ -242,7 +284,7 @@ ApplicationWindow {
                             delegate: Label {
                                 width: cardList.width - 14
                                 text: model.line
-                                color: "#8b98a5"
+                                color: "#5F7FA8"
                                 font.pixelSize: 9
                                 font.family: "Consolas, monospace"
                                 elide: Text.ElideRight
