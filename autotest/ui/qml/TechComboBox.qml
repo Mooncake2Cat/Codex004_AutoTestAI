@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-// 深蓝底 + 琥珀边框/文字 的下拉菜单
+// 深蓝底 + 低饱和暗琥珀边框/文字 的下拉菜单
 ComboBox {
     id: control
     font.family: "Microsoft YaHei UI"
@@ -16,12 +16,12 @@ ComboBox {
         contentItem: Text {
             text: control.textRole ? model[control.textRole] : modelData
             font: control.font
-            color: highlighted ? "#1A1206" : "#FDE68A"
+            color: highlighted ? "#F5E8CC" : "#E0C58A"
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
         }
         background: Rectangle {
-            color: highlighted ? "#F59E0B" : "transparent"
+            color: highlighted ? "#6E4A14" : "transparent"
         }
     }
 
@@ -37,7 +37,7 @@ ComboBox {
             context.lineTo(width, 0);
             context.lineTo(width / 2, height);
             context.closePath();
-            context.fillStyle = control.enabled ? "#F59E0B" : "#7A6A4A";
+            context.fillStyle = control.enabled ? "#C09A4A" : "#7A6E58";
             context.fill();
         }
     }
@@ -47,7 +47,7 @@ ComboBox {
         rightPadding: control.indicator.width + 6
         text: control.displayText
         font: control.font
-        color: control.enabled ? "#FDE68A" : "#7A6A4A"
+        color: control.enabled ? "#E0C58A" : "#7A6E58"
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
@@ -56,9 +56,9 @@ ComboBox {
         implicitWidth: 100
         implicitHeight: 24
         radius: 3
-        color: control.enabled ? (control.hovered ? "#132A47" : "#0B1830") : "#0A1628"
+        color: control.enabled ? (control.hovered ? "#12253F" : "#0B1830") : "#0A1628"
         border.width: 1
-        border.color: control.enabled ? (control.hovered || control.popup.visible ? "#FBBF24" : "#B45309") : "#3A2E1A"
+        border.color: control.enabled ? (control.hovered || control.popup.visible ? "#A87B2A" : "#7A5A20") : "#3A3222"
     }
 
     popup: Popup {
@@ -75,7 +75,7 @@ ComboBox {
         }
         background: Rectangle {
             color: "#0B1830"
-            border.color: "#F59E0B"
+            border.color: "#7A5A20"
             radius: 3
         }
     }
