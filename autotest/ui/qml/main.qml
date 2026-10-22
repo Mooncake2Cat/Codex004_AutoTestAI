@@ -31,6 +31,10 @@ ApplicationWindow {
         sequence: "F2"
         onActivated: root.toggleArchitecture()
     }
+            Button {
+                text: qsTr("????")
+                onClicked: discoveryDialog.open()
+            }
 
     // 面板选项表
     property int selectedChannel: 1
@@ -101,6 +105,63 @@ ApplicationWindow {
     }
 
     // 所选步骤的参数（由能力模型自动生成）
+    function addDiscoveryRow(item, kind) {
+        discoveryModel.append({
+            "transportKind": kind,
+            "host": item.host || "",
+            "port": item.port || 0,
+            "resource": item.resource || "",
+            "idn": item.idn || "",
+            "vendor": item.vendor || "",
+            "modelName": item.model || "",
+            "serial": item.serial || "",
+            "firmware": item.firmware || "",
+            "title": (kind === "visa" ? "VISA" : "TCP") + " ? "
+                     + (item.model || item.idn || item.host || item.resource || "????")
+        })
+    }
+    function testTcp(host, port) {
+        var r = controller.testInstrumentConnection(JSON.stringify({
+            transport: { kind: "tcp", host: host, port: port },
+            protocol: { kind: "scpi", terminator: "\n" }
+        }))
+        tcpTestResult.text = r.ok ? ("?????" + r.idn) : ("?????" + r.error)
+    }
+    function addTcp(host, port) {
+        controller.addDiscoveredInstrument(JSON.stringify({
+            transport_kind: "tcp", host: host, port: port, idn: "", model: "", vendor: ""
+        }))
+        discoveryStatus.text = "???? config/instruments.json?????????????"
+    }
+    function runScan(subnet) {
+        discoveryModel.clear()
+        discoveryStatus.text = "???????????..."
+        var results = controller.scanInstruments(subnet)
+        for (var i = 0; i < results.length; i++) addDiscoveryRow(results[i], "tcp")
+        discoveryStatus.text = "??????? " + results.length + " ???"
+    }
+    function runVisa() {
+        discoveryModel.clear()
+        discoveryStatus.text = "?? VISA ??..."
+        var results = controller.enumerateVisaInstruments()
+        for (var i = 0; i < results.length; i++) addDiscoveryRow(results[i], "visa")
+        discoveryStatus.text = "VISA ?????" + results.length + " ???"
+    }
+    function addDiscovered(model) {
+        var payload = {
+            transport_kind: model.transportKind,
+            host: model.host,
+            port: model.port,
+            resource: model.resource,
+            idn: model.idn,
+            vendor: model.vendor,
+            model: model.modelName,
+            serial: model.serial,
+            firmware: model.firmware
+        }
+        discoveryStatus.text = controller.addDiscoveredInstrument(JSON.stringify(payload))
+    }
+
     function refreshStepParams() {
         stepParamModel.clear()
         if (flowStepList.currentIndex < 0) return
@@ -501,6 +562,13 @@ ApplicationWindow {
                             text: qsTr("直流电源 SPD3303X-E（虚拟）")
                             checked: root.powerVisible
                             onToggled: { root.powerVisible = checked; controller.setInstrumentVisible("power1", checked) }
+                        }
+                        Label {
+                            text: controller.instrumentSummary
+                            color: "#8b98a5"
+                            font.pixelSize: 9
+                            elide: Text.ElideRight
+                            Layout.maximumWidth: 300
                         }
                         Item { Layout.fillWidth: true }
                         Label {
@@ -1365,6 +1433,7 @@ ApplicationWindow {
     ListModel { id: flowStepModel }
     ListModel { id: addActionModel }
     ListModel { id: stepParamModel }
+    ListModel { id: discoveryModel }
     ListModel { id: reportModel }
 
     Connections {
@@ -1376,6 +1445,109 @@ ApplicationWindow {
         }
         function onFlowChanged() { root.refreshFlow() }
         function onReportChanged() { root.refreshReport() }
+    }
+    Dialog {
+        id: discoveryDialog
+        title: qsTr("仪器发现（连接测试 / 网络扫描 / VISA 枚举）")
+        modal: true
+        width: 820
+        height: 560
+        standardButtons: Dialog.Close
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 6
+
+            RowLayout {
+                Label { text: qsTr("TCP 手工添加"); font.bold: true }
+                TextField {
+                    id: tcpHost
+                    placeholderText: qsTr("IP 地址")
+                    text: "192.168.10.16"
+                    Layout.preferredWidth: 150
+                }
+                Label { text: qsTr("端口") }
+                SpinBox {
+                    id: tcpPort
+                    from: 1
+                    to: 65535
+                    value: 5555
+                    editable: true
+                    Layout.preferredWidth: 110
+                }
+                Button { text: qsTr("连接测试"); onClicked: root.testTcp(tcpHost.text, tcpPort.value) }
+                Button { text: qsTr("添加"); onClicked: root.addTcp(tcpHost.text, tcpPort.value) }
+                Item { Layout.fillWidth: true }
+            }
+            Label {
+                id: tcpTestResult
+                text: ""
+                color: "#57606a"
+                font.pixelSize: 10
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#d0d7de" }
+
+            RowLayout {
+                Label { text: qsTr("网络扫描 / VISA"); font.bold: true }
+                TextField {
+                    id: subnetField
+                    text: controller.localSubnet()
+                    placeholderText: qsTr("网段，如 192.168.1.0/24")
+                    Layout.preferredWidth: 180
+                }
+                Button { text: qsTr("开始扫描"); onClicked: root.runScan(subnetField.text) }
+                Button { text: qsTr("枚举 VISA"); onClicked: root.runVisa() }
+                Item { Layout.fillWidth: true }
+            }
+            Label {
+                id: discoveryStatus
+                text: qsTr("手动触发，避免自动扫描公司网络")
+                color: "#8b98a5"
+                font.pixelSize: 10
+            }
+
+            ListView {
+                id: discoveryList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                model: discoveryModel
+                clip: true
+                spacing: 3
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                delegate: Rectangle {
+                    width: discoveryList.width - 8
+                    height: 52
+                    color: "#f6f8fa"
+                    border.color: "#d0d7de"
+                    radius: 3
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Label { text: model.title; font.bold: true; color: "#24292f" }
+                            Label {
+                                text: model.idn
+                                color: "#57606a"
+                                font.pixelSize: 10
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+                        Button {
+                            text: qsTr("添加到注册表")
+                            padding: 2
+                            Layout.preferredHeight: 24
+                            onClicked: root.addDiscovered(model)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

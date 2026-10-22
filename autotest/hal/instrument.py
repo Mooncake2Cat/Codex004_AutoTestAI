@@ -30,3 +30,9 @@ class Instrument(ABC):
     @property
     def instrument_id(self) -> str:
         return getattr(self, "_instrument_id", "")
+
+    @property
+    def is_connected(self) -> bool:
+        """连接状态（默认 False，具体驱动覆盖）。"""
+        return False
+

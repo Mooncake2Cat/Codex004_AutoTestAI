@@ -250,7 +250,7 @@ class TestController(QObject):
         label = "仿真" if is_mock else "真机"
         try:
             with self._scope_lock:
-                if getattr(inst, "_sock", None) is None:
+                if not getattr(inst, "is_connected", False):
                     inst.initialize()
                 if command.endswith("?"):
                     resp = inst.query(command)
@@ -342,7 +342,7 @@ class TestController(QObject):
         with bus.quiet():
             try:
                 with self._scope_lock:
-                    if getattr(inst, "_sock", None) is None:
+                    if not getattr(inst, "is_connected", False):
                         inst.initialize()
                     return inst.query(command).strip()
             except Exception:  # noqa: BLE001
@@ -364,7 +364,7 @@ class TestController(QObject):
         with bus.quiet():
             try:
                 with self._scope_lock:
-                    if getattr(inst, "_sock", None) is None:
+                    if not getattr(inst, "is_connected", False):
                         inst.initialize()
                     return inst.query(scope_commands.measure_item_query(item, channel)).strip()
             except Exception:  # noqa: BLE001
@@ -380,7 +380,7 @@ class TestController(QObject):
         with bus.quiet():
             try:
                 with self._scope_lock:
-                    if getattr(inst, "_sock", None) is None:
+                    if not getattr(inst, "is_connected", False):
                         inst.initialize()
                     return list(inst.read_waveform(int(channel)))
             except Exception:  # noqa: BLE001
@@ -583,6 +583,93 @@ class TestController(QObject):
         return "合计 %s 项 / 合格 %s 项 / 不合格 %s 项%s" % (
             s.get("total", 0), s.get("passed", 0), s.get("failed", 0),
             "" if s.get("all_passed") else "（存在不合格项）")
+    # ---------- 仪器发现（阶段6：一期 + 二期） ----------
+    @Slot(result=str)
+    def localSubnet(self) -> str:
+        from ..hal.discovery import local_subnet_cidr
+
+        return local_subnet_cidr()
+
+    @Slot(str, result="QVariantMap")
+    def testInstrumentConnection(self, config_json: str):
+        import json
+
+        from ..hal.discovery import test_connection
+
+        try:
+            cfg = json.loads(config_json)
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": "参数解析失败: %s" % exc, "idn": ""}
+        return test_connection(cfg)
+
+    @Slot(str, result="QVariantList")
+    def scanInstruments(self, subnet: str):
+        from ..hal.discovery import scan_network
+
+        try:
+            return scan_network(subnet)
+        except Exception as exc:  # noqa: BLE001
+            bus.publish("ui", "action", "scanInstruments", detail=subnet,
+                        result=str(exc), status="error")
+            return []
+
+    @Slot(result="QVariantList")
+    def enumerateVisaInstruments(self):
+        from ..hal.discovery import enumerate_visa
+
+        return enumerate_visa()
+
+    @Slot(str, result=str)
+    def addDiscoveredInstrument(self, item_json: str) -> str:
+        import json
+
+        from ..core.config import resolve_path
+        from ..hal.discovery import add_instrument_to_registry, make_registry_entry
+
+        try:
+            item = json.loads(item_json)
+        except Exception as exc:  # noqa: BLE001
+            return "参数错误: %s" % exc
+        model = str(item.get("model", "")).upper()
+        vendor = str(item.get("vendor", "")).upper()
+        if "DHO" in model or "RIGOL" in vendor:
+            dtype, panel, caps = "rigol_dho", "ScopeInstrument", ["scope"]
+        elif "SPD" in model or "SIGLENT" in vendor:
+            dtype, panel, caps = "siglent_spd3303x", "PowerSupplyInstrument", ["power"]
+        else:
+            dtype, panel, caps = "tcp_scpi", "", []
+        raw_id = str(item.get("serial") or item.get("host") or item.get("resource") or "new")
+        iid = "inst_" + "".join(ch if ch.isalnum() else "_" for ch in raw_id)
+        entry = make_registry_entry(item, instrument_id=iid, device_type=dtype, panel=panel)
+        entry["capabilities"] = caps
+        add_instrument_to_registry(entry, resolve_path("config/instruments.json"))
+        self._reload_instrument_defs()
+        bus.publish("ui", "action", "addDiscoveredInstrument", detail=entry.get("name", ""))
+        return "已添加: %s（%s）" % (entry.get("name", iid), dtype)
+
+    def _reload_instrument_defs(self) -> None:
+        from ..core.config import load_instruments
+        from ..hal.factory import create_instrument
+
+        defs = load_instruments()
+        if not defs:
+            return
+        existing = {cfg.get("id") for cfg in self._instrument_defs}
+        self._instrument_defs = defs
+        for cfg in defs:
+            iid = cfg.get("id")
+            if iid and iid not in existing:
+                try:
+                    self._instruments[iid] = create_instrument(iid, cfg)
+                except Exception:  # noqa: BLE001
+                    pass
+        self._visible.update({cfg["id"]: bool(cfg.get("visible", True)) for cfg in defs if cfg.get("id")})
+        self.instrumentsChanged.emit()
+
+    @Property(str, notify=instrumentsChanged)
+    def instrumentSummary(self) -> str:
+        return " | ".join("%s(%s)" % (c.get("model") or c.get("id"), c.get("type", ""))
+                          for c in self._instrument_defs)
     @Slot(str, result=str)
     def saveReportExcel(self, path: str = "reports/report.xlsx") -> str:
         """Excel 导出（阶段5：接口预留，未实现时给出提示）。"""

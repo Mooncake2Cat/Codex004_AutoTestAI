@@ -42,6 +42,10 @@ class MockInstrument(Instrument):
     def __init__(self, instrument_id: str = "mock-1"):
         self._instrument_id = instrument_id
 
+    @property
+    def is_connected(self) -> bool:
+        return True
+
     def initialize(self) -> None:
         return None
 
@@ -97,5 +101,6 @@ class MockInstrument(Instrument):
 
     def close(self) -> None:
         return None
+
 
 

@@ -1,4 +1,4 @@
-﻿# 通用自动化测试软件平台 - 原型验证版（Windows / 无服务器阶段）
+# 通用自动化测试软件平台 - 原型验证版（Windows / 无服务器阶段）
 
 按 `docs/架构建议.md` 的“六层”架构搭建的原理验证原型，当前链路：
 **QML 界面（示波器仿真屏）→ PySide6 桥接 → 执行引擎 → HAL(网口仪器) → SQLite 落库 → HTML 报告**。
@@ -73,6 +73,20 @@ python run.py
 测试流程支持 **9 类步骤**：`action`（能力动作，含加电/断电简写）、`set_param`、`measure`、`wait`、`compute`（波形算法）、`limit_check`（上下限判定）、`store`、`report`、`loop`/`branch`。
 参数中可用 `$变量名` 引用前面步骤的结果。能力模型见 `autotest/core/capabilities.py`（电源 6 个动作 + 示波器 6 个动作，含安全动作）。
 演示流程：`config/flows/flow_phase4_demo.json`（加电→测量→计算→判定→报表→断电）。
+
+
+## 三级抽象与仪器发现（阶段6）
+
+- **传输层**：TCP Socket / 串口(pyserial) / VISA(pyvisa，USB·LAN·VXI-11·USBTMC)；
+- **协议层**：SCPI（含二进制块）/ Raw；Modbus 为预留接口；
+- **设备层**：示波器、电源驱动；新增仪器只需组合已有传输/协议 + 设备驱动；
+- 界面顶部 **“发现仪器”** 按钮：
+  1. **TCP 手工添加**：填 IP/端口 → 连接测试（`*IDN?`）→ 添加；
+  2. **网段扫描**：扫描 5555/5025 端口并识别仪器；
+  3. **VISA 枚举**：列出本机可见的 VISA 资源并识别；
+  4. 结果可逐条写入 `config/instruments.json`。
+
+> Modbus/CAN 为预留接口；新发现仪器的面板（QML/面板模型）需按设备类型实现。
 
 ## 仪器注册表（多仪器）
 

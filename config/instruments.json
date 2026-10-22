@@ -1,4 +1,4 @@
-﻿{
+{
   "instruments": [
     {
       "id": "scope1",
@@ -8,15 +8,28 @@
       "panel": "ScopeInstrument",
       "simulate": true,
       "visible": true,
-      "capabilities": ["scope"],
+      "capabilities": [
+        "scope"
+      ],
       "transport": {
-        "kind": "tcp_scpi",
+        "kind": "tcp",
         "host": "192.168.10.16",
         "port": 5555,
         "timeout": 3.0,
         "terminator": "\n"
       },
-      "options": { "channels": 4 }
+      "options": {
+        "channels": 4
+      },
+      "protocol": {
+        "kind": "scpi",
+        "terminator": "\n"
+      },
+      "device": {
+        "kind": "rigol_dho",
+        "model": "DHO924S",
+        "channels": 4
+      }
     },
     {
       "id": "power1",
@@ -26,15 +39,28 @@
       "panel": "PowerSupplyInstrument",
       "simulate": true,
       "visible": true,
-      "capabilities": ["power"],
+      "capabilities": [
+        "power"
+      ],
       "transport": {
-        "kind": "tcp_scpi",
+        "kind": "tcp",
         "host": "192.168.1.50",
         "port": 5025,
         "timeout": 3.0,
         "terminator": "\n"
       },
-      "options": { "channels": 3 }
+      "options": {
+        "channels": 3
+      },
+      "protocol": {
+        "kind": "scpi",
+        "terminator": "\n"
+      },
+      "device": {
+        "kind": "siglent_spd3303x",
+        "model": "SPD3303X-E",
+        "channels": 3
+      }
     }
   ]
 }
