@@ -113,7 +113,7 @@ ApplicationWindow {
                 checked: arch.autoScroll
                 onToggled: arch.autoScroll = checked
             }
-            Button {
+            TechButton {
                 text: qsTr("清空事件")
                 onClicked: { trace.clear(); arch.clearRequested() }
             }

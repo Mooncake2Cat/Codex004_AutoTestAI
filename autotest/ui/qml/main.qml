@@ -33,7 +33,7 @@ ApplicationWindow {
         sequence: "F2"
         onActivated: root.toggleArchitecture()
     }
-            Button {
+            TechButton {
                 text: qsTr("????")
                 onClicked: discoveryDialog.open()
             }
@@ -291,22 +291,22 @@ ApplicationWindow {
         // ================= 流程按钮行 =================
         RowLayout {
             spacing: 8
-            Button { text: qsTr("加载示例流程"); onClicked: controller.loadFlow("config/flow_sample.json") }
-            Button { text: qsTr("运行流程"); onClicked: { resultModel.clear(); controller.runFlow() } }
-            Button { text: qsTr("保存报告"); onClicked: controller.saveReport("reports/report.html") }
+            TechButton { text: qsTr("加载示例流程"); onClicked: controller.loadFlow("config/flow_sample.json") }
+            TechButton { text: qsTr("运行流程"); onClicked: { resultModel.clear(); controller.runFlow() } }
+            TechButton { text: qsTr("保存报告"); onClicked: controller.saveReport("reports/report.html") }
             Rectangle { width: 1; height: 24; color: "#1E3A5F" }
-            Button {
+            TechButton {
                 text: scope.running ? qsTr("⏸ STOP") : qsTr("▶ RUN")
                 onClicked: scope.setRunning(!scope.running)
             }
-            Button { text: qsTr("SINGLE"); onClicked: scope.singleShot() }
-            Button { text: qsTr("AUTO 自动设置"); onClicked: scope.autoSet() }
-            Button {
+            TechButton { text: qsTr("SINGLE"); onClicked: scope.singleShot() }
+            TechButton { text: qsTr("AUTO 自动设置"); onClicked: scope.autoSet() }
+            TechButton {
                 text: (scope.waveformOn ? "● " : "○ ")
                       + (scope.simulationMode ? qsTr("仿真波形") : qsTr("波形读取"))
                 onClicked: scope.setWaveformOn(!scope.waveformOn)
             }
-            Button {
+            TechButton {
                 text: qsTr("架构台 (F2)")
                 onClicked: root.toggleArchitecture()
             }
@@ -351,7 +351,7 @@ ApplicationWindow {
 
                     RowLayout {
                         spacing: 6
-                        Button {
+                        TechButton {
                             text: qsTr("加电")
                             onClicked: {
                                 power.setChannel(1)
@@ -359,7 +359,7 @@ ApplicationWindow {
                                 controller.manualAction("power_on")
                             }
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("断电")
                             onClicked: {
                                 power.setChannel(1)
@@ -367,28 +367,28 @@ ApplicationWindow {
                                 controller.manualAction("power_off")
                             }
                         }
-                        Button { text: qsTr("测波形"); onClicked: scope.setWaveformOn(true) }
+                        TechButton { text: qsTr("测波形"); onClicked: scope.setWaveformOn(true) }
                         Item { Layout.fillWidth: true }
                     }
 
                     RowLayout {
                         spacing: 6
-                        Button {
+                        TechButton {
                             text: qsTr("▶ 启动")
                             enabled: !controller.flowRunning && controller.flowLoaded
                             onClicked: { resultModel.clear(); controller.runFlow() }
                         }
-                        Button {
+                        TechButton {
                             text: controller.flowPaused ? qsTr("▶ 继续") : qsTr("⏸ 暂停")
                             enabled: controller.flowRunning
                             onClicked: controller.flowPaused ? controller.resumeFlow() : controller.pauseFlow()
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("■ 停止")
                             enabled: controller.flowRunning
                             onClicked: controller.stopFlow()
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("⏭ 单步")
                             onClicked: controller.stepFlow()
                         }
@@ -425,7 +425,7 @@ ApplicationWindow {
                             textRole: "label"
                             model: addActionModel
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("添加")
                             padding: 2
                             Layout.preferredHeight: 24
@@ -440,21 +440,21 @@ ApplicationWindow {
 
                     RowLayout {
                         spacing: 4
-                        Button {
+                        TechButton {
                             text: qsTr("删除")
                             padding: 2
                             Layout.preferredHeight: 24
                             enabled: !controller.flowRunning && flowStepList.currentIndex >= 0
                             onClicked: { controller.removeStep(flowStepList.currentIndex); root.refreshFlow() }
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("上移")
                             padding: 2
                             Layout.preferredHeight: 24
                             enabled: !controller.flowRunning && flowStepList.currentIndex > 0
                             onClicked: { controller.moveStep(flowStepList.currentIndex, -1); root.refreshFlow() }
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("下移")
                             padding: 2
                             Layout.preferredHeight: 24
@@ -463,7 +463,7 @@ ApplicationWindow {
                             onClicked: { controller.moveStep(flowStepList.currentIndex, 1); root.refreshFlow() }
                         }
                         Item { Layout.fillWidth: true }
-                        Button {
+                        TechButton {
                             text: qsTr("保存流程")
                             padding: 2
                             Layout.preferredHeight: 24
@@ -646,7 +646,7 @@ ApplicationWindow {
                                         text: scope.simulationMode ? qsTr("（仿真）") : qsTr("（真机）")
                                         color: "#5F7FA8"; font.pixelSize: 10
                                     }
-                                    Button {
+                                    TechButton {
                                         text: qsTr("参数")
                                         checkable: true
                                         checked: root.showScopeSettings
@@ -897,12 +897,12 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.preferredHeight: 30
             visible: root.showScopeSettings
-            TabButton { text: qsTr("垂直") }
-            TabButton { text: qsTr("水平") }
-            TabButton { text: qsTr("触发") }
-            TabButton { text: qsTr("采集") }
-            TabButton { text: qsTr("测量") }
-            TabButton { text: qsTr("信号源") }
+            TechTabButton { text: qsTr("垂直") }
+            TechTabButton { text: qsTr("水平") }
+            TechTabButton { text: qsTr("触发") }
+            TechTabButton { text: qsTr("采集") }
+            TechTabButton { text: qsTr("测量") }
+            TechTabButton { text: qsTr("信号源") }
         }
 
         Rectangle {
@@ -940,7 +940,7 @@ ApplicationWindow {
                             ButtonGroup { id: chButtonGroup; exclusive: true }
                             Repeater {
                                 model: 4
-                                Button {
+                                TechButton {
                                     padding: 2
                                     Layout.preferredHeight: 22
                                     text: (checked ? "●" : "○") + "CH" + (index + 1)
@@ -1098,7 +1098,7 @@ ApplicationWindow {
                             value: Math.round(scope.triggerLevel() * 1000)
                             onValueModified: scope.setTriggerLevel(value / 1000.0)
                         }
-                        Button {
+                        TechButton {
                             padding: 2
                             Layout.preferredHeight: 22
                             Layout.columnSpan: 2
@@ -1118,16 +1118,16 @@ ApplicationWindow {
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 4
-                            Button { padding: 2; Layout.preferredHeight: 22; text: "RUN"; highlighted: scope.running; onClicked: scope.setRunning(true) }
-                            Button { padding: 2; Layout.preferredHeight: 22; text: "STOP"; highlighted: !scope.running; onClicked: scope.setRunning(false) }
-                            Button { padding: 2; Layout.preferredHeight: 22; text: "SINGLE"; onClicked: scope.singleShot() }
+                            TechButton { padding: 2; Layout.preferredHeight: 22; text: "RUN"; highlighted: scope.running; onClicked: scope.setRunning(true) }
+                            TechButton { padding: 2; Layout.preferredHeight: 22; text: "STOP"; highlighted: !scope.running; onClicked: scope.setRunning(false) }
+                            TechButton { padding: 2; Layout.preferredHeight: 22; text: "SINGLE"; onClicked: scope.singleShot() }
                         }
                         Label { text: qsTr("设置"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
                         RowLayout {
                             Layout.columnSpan: 3
                             spacing: 4
-                            Button { padding: 2; Layout.preferredHeight: 22; text: qsTr("AUTO 自动设置"); onClicked: scope.autoSet() }
-                            Button { padding: 2; Layout.preferredHeight: 22; text: qsTr("清除显示"); onClicked: scope.clearScope() }
+                            TechButton { padding: 2; Layout.preferredHeight: 22; text: qsTr("AUTO 自动设置"); onClicked: scope.autoSet() }
+                            TechButton { padding: 2; Layout.preferredHeight: 22; text: qsTr("清除显示"); onClicked: scope.clearScope() }
                         }
 
                         Label { text: qsTr("状态"); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight; color: "#8FB3D9" }
@@ -1156,7 +1156,7 @@ ApplicationWindow {
                             spacing: 3
                             Repeater {
                                 model: root.measureKeys.length
-                                Button {
+                                TechButton {
                                     property string mkey: root.measureKeys[index]
                                     padding: 2
                                     Layout.preferredHeight: 22
@@ -1165,7 +1165,7 @@ ApplicationWindow {
                                 }
                             }
                         }
-                        Button {
+                        TechButton {
                             padding: 2
                             Layout.preferredHeight: 22
                             text: qsTr("复位统计")
@@ -1328,7 +1328,7 @@ ApplicationWindow {
                                             color: power.outputOn ? "#34D399" : "#5F7FA8"
                                         }
                                         Item { Layout.fillWidth: true }
-                                        Button { text: qsTr("读取一次"); onClicked: power.refresh() }
+                                        TechButton { text: qsTr("读取一次"); onClicked: power.refresh() }
                                     }
 
                                     Label {
@@ -1415,13 +1415,13 @@ ApplicationWindow {
 
                     RowLayout {
                         spacing: 4
-                        Button {
+                        TechButton {
                             text: qsTr("导出 HTML")
                             padding: 2
                             Layout.preferredHeight: 24
                             onClicked: controller.saveReport("reports/report.html")
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("导出 Excel（预留）")
                             padding: 2
                             Layout.preferredHeight: 24
@@ -1509,7 +1509,7 @@ ApplicationWindow {
         modal: true
         width: 820
         height: 560
-        standardButtons: Dialog.Close
+        standardButtons: Dialog.NoButton
 
         ColumnLayout {
             anchors.fill: parent
@@ -1532,8 +1532,8 @@ ApplicationWindow {
                     editable: true
                     Layout.preferredWidth: 110
                 }
-                Button { text: qsTr("连接测试"); onClicked: root.testTcp(tcpHost.text, tcpPort.value) }
-                Button { text: qsTr("添加"); onClicked: root.addTcp(tcpHost.text, tcpPort.value) }
+                TechButton { text: qsTr("连接测试"); onClicked: root.testTcp(tcpHost.text, tcpPort.value) }
+                TechButton { text: qsTr("添加"); onClicked: root.addTcp(tcpHost.text, tcpPort.value) }
                 Item { Layout.fillWidth: true }
             }
             Label {
@@ -1555,8 +1555,8 @@ ApplicationWindow {
                     placeholderText: qsTr("网段，如 192.168.1.0/24")
                     Layout.preferredWidth: 180
                 }
-                Button { text: qsTr("开始扫描"); onClicked: root.runScan(subnetField.text) }
-                Button { text: qsTr("枚举 VISA"); onClicked: root.runVisa() }
+                TechButton { text: qsTr("开始扫描"); onClicked: root.runScan(subnetField.text) }
+                TechButton { text: qsTr("枚举 VISA"); onClicked: root.runVisa() }
                 Item { Layout.fillWidth: true }
             }
             Label {
@@ -1595,7 +1595,7 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                             }
                         }
-                        Button {
+                        TechButton {
                             text: qsTr("添加到注册表")
                             padding: 2
                             Layout.preferredHeight: 24
@@ -1604,10 +1604,17 @@ ApplicationWindow {
                     }
                 }
             }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                TechButton {
+                    text: qsTr("关闭")
+                    onClicked: discoveryDialog.close()
+                }
+            }
         }
     }
 }
-
 
 
 
